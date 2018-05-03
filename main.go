@@ -15,6 +15,15 @@ type Mailz struct {
 func Main() {
 	m := &Mailz{}
 
+	// handle subcommands
+	if len(os.Args) > 1 {
+		err := Dispatch(os.Args[1:])
+		if err != nil {
+			m.Fatal("Error with command %q: %s", os.Args[1], err)
+		}
+		return
+	}
+
 	// TODO start co-processes
 
 	// locate the maildir
@@ -42,6 +51,23 @@ func Main() {
 	// TODO render message list (to show subfolders)
 
 	return
+}
+
+func Dispatch(args []string) error {
+	var err error
+
+	switch args[0] {
+	case "resolve":
+		err = CommandResolve(args[1:])
+	case "set-flags":
+		err = CommandSetFlags(args[1:])
+	case "unique":
+		err = CommandUnique(args[1:])
+	default:
+		return fmt.Errorf("Unknown subcommand %q", args[0])
+	}
+
+	return err
 }
 
 // CallHook invokes a hook with its required parameters
@@ -73,6 +99,6 @@ func (m *Mailz) CallHook(name string) error {
 }
 
 func (m *Mailz) Fatal(format string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, format+"\n", args)
+	fmt.Fprintf(os.Stderr, format+"\n", args...)
 	os.Exit(1)
 }
