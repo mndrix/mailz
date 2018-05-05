@@ -1,7 +1,3 @@
-# summarize folder contents
-alias s="find {good,better,best,inbox,spam}/{cur,new} -type f | awk -F/ '{print \$1}' | sort | uniq -c"
-
-
 # delete a message
 d() {
     mailz set-flags +T "$1"
@@ -51,6 +47,11 @@ r() {
     echo "From someone@example.com Thu Apr 26 18:30:03 2018" >/tmp/message
     cat "$1" >>/tmp/message
     mail -f /tmp/message
+}
+
+# summarize folder contents
+s() {
+    mailz count best better good inbox spam | awk '$2==0{$2=""} {printf "%4s %s\n", $2, $1}'
 }
 
 # sync mailstore
