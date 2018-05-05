@@ -1,8 +1,6 @@
 # summarize folder contents
 alias s="find {good,better,best,inbox,spam}/{cur,new} -type f | awk -F/ '{print \$1}' | sort | uniq -c"
 
-# sync mailstore
-alias sy='mbsync -V -D gmail | less'
 
 # delete a message
 d() {
@@ -44,4 +42,13 @@ r() {
     echo "From someone@example.com Thu Apr 26 18:30:03 2018" >/tmp/message
     cat "$1" >>/tmp/message
     mail -f /tmp/message
+}
+
+# sync mailstore
+sy() {
+    if [[ "$1" == "-q" ]]; then
+        mbsync gmail
+    else 
+        mbsync -V -D gmail | less
+    fi
 }
