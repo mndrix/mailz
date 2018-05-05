@@ -6,7 +6,7 @@ alias sy='mbsync -V -D gmail | less'
 
 # delete a message
 d() {
-    mv "$1" "${1}T"
+    mailz set-flags +T "$1"
 }
 
 # list emails
