@@ -7,6 +7,15 @@ d() {
     mailz set-flags +T "$1"
 }
 
+# expunge mailstore
+ex() {
+    if [[ "$1" == "-q" ]]; then
+        mbsync ${opts} --expunge --noop gmail
+    else
+        mbsync -V -D --expunge --noop gmail
+    fi
+}
+
 # list emails
 l() {
     if [[ -d new && -d cur ]]; then
