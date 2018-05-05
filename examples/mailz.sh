@@ -19,13 +19,15 @@ l() {
     fi
 }
 
+# copy a message to another folder
+c() {
+    mailz copy "$1" "$2"
+}
+
 # move a message to another folder
 m() {
-    readonly hash="$(sha256 -q $1)"
-    readonly file="${hash}:2,"
-    readonly tmp="$HOME/Mail/$2/tmp/${file}"
-    readonly final="$HOME/Mail/$2/cur/${file}"
-    cp "$1" "${tmp}" && mv "${tmp}" "${final}" && d "$1"
+    mailz copy "$1" "$2" && \
+        mailz set-flags +T "$1"
 }
 
 # view a particular email

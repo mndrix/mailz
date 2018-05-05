@@ -19,3 +19,24 @@ func TestUnique(t *testing.T) {
 		}
 	}
 }
+
+func TestGenerateUnique(t *testing.T) {
+	seen := make(map[string]bool)
+	ok := func(u string) {
+		if len(seen) < 10 {
+			// output a few for inspection
+			t.Logf("unique = %s", u)
+		}
+		if len(u) != 26 {
+			t.Errorf("wrong size: %s", u)
+		}
+		if seen[u] {
+			t.Errorf("collision: %s", u)
+		}
+		seen[u] = true
+	}
+	for i := 0; i < 1000; i++ {
+		u := GenerateUnique()
+		ok(u)
+	}
+}

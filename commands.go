@@ -1,9 +1,11 @@
 package mailz // import "github.com/mndrix/mailz"
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
+	"github.com/mndrix/rand"
 	"github.com/pkg/errors"
 )
 
@@ -52,6 +54,114 @@ func Resolve(ref string) (string, error) {
 	default:
 		return "", ErrAmbiguousRef
 	}
+}
+
+// IsMaildir returns true if path refers to a valid maildir in the
+// filesystem.
+func IsMaildir(path string) bool {
+	// the directory must exist
+	stat, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false
+	}
+	if err != nil {
+		// unexpected error
+		panic(err)
+	}
+	if !stat.IsDir() {
+		return false
+	}
+
+	// ... and each mandatory subdirectory must exist
+	for _, subdir := range []string{"cur", "new", "tmp"} {
+		subpath := filepath.Join(path, subdir)
+		stat, err = os.Stat(subpath)
+		if os.IsNotExist(err) {
+			return false
+		}
+		if err != nil {
+			// unexpected error
+			panic(err)
+		}
+		if !stat.IsDir() {
+			return false
+		}
+	}
+
+	return true
+}
+
+func CommandCopy(args []string) error {
+	if len(args) != 2 {
+		return errors.New("Must have exactly 2 arguments")
+	}
+
+	// where's the source message?
+	ref := args[0]
+	resolved, err := Resolve(ref)
+	if err != nil {
+		return errors.Wrap(err, "resolving source")
+	}
+	src, err := ParsePath(resolved)
+	if err != nil {
+		return errors.Wrap(err, "parsing source path")
+	}
+
+	// where's the destination?
+	dst := args[1]
+	if !IsMaildir(dst) {
+		return fmt.Errorf("Not a maildir: %s", dst)
+	}
+
+	// deliver the message to its new maildir
+	msg, err := os.Open(resolved)
+	if err != nil {
+		return errors.Wrap(err, "opening source message")
+	}
+	defer msg.Close()
+	path, err := Deliver(dst, msg, src.FlagString())
+	if err != nil {
+		return errors.Wrap(err, "delivering message")
+	}
+	fmt.Println(path)
+	return nil
+}
+
+const alpha32 = `0123456789abcdefghjkmnpqrstuvwxy`
+
+func GenerateUnique() string {
+	const size = 26 // 130 bits (2 more than standard UUID)
+	chars := make([]rune, size)
+	for i := 0; i < size; i++ {
+		chars[i] = rune(alpha32[rand.Intn(size)])
+	}
+	return string(chars)
+}
+
+// Deliver writes the content of a new message (msg) with specific
+// flags into a destination maildir (dst).  To generate the flags
+// string, see Path.FlagString()
+func Deliver(dst string, msg io.Reader, flags string) (string, error) {
+	name := GenerateUnique() + ":2," + flags
+
+	tmp := filepath.Join(dst, "tmp", name)
+	out, err := os.Create(tmp)
+	if err != nil {
+		return "", errors.Wrap(err, "creating temp file")
+	}
+	defer out.Close()
+	_, err = io.Copy(out, msg)
+	if err != nil {
+		return "", errors.Wrap(err, "writing new message")
+	}
+
+	// move from tmp/ to new/
+	final := filepath.Join(dst, "new", name)
+	err = os.Rename(tmp, final)
+	if err != nil {
+		return "", errors.Wrap(err, "renaming new message")
+	}
+	return final, nil
 }
 
 func CommandResolve(refs []string) error {

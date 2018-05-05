@@ -57,6 +57,8 @@ func Dispatch(args []string) error {
 	var err error
 
 	switch args[0] {
+	case "copy":
+		err = CommandCopy(args[1:])
 	case "resolve":
 		err = CommandResolve(args[1:])
 	case "set-flags":
