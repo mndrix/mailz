@@ -1,3 +1,5 @@
+MAIL=~/Mail
+
 # delete a message
 d() {
     mailz set-flags +T "$1"
@@ -51,7 +53,10 @@ r() {
 
 # summarize folder contents
 s() {
-    mailz count best better good inbox spam | awk '$2==0{$2=""} {printf "%4s %s\n", $2, $1}'
+    (
+        cd "${MAIL}"
+        mailz count best better good inbox spam | awk '$2==0{$2=""} {printf "%4s %s\n", $2, $1}'
+    )
 }
 
 # sync mailstore
