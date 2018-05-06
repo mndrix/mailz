@@ -59,6 +59,13 @@ s() {
     )
 }
 
+# select a folder
+choose() {
+    cd "${MAIL}/$1"
+    echo "Selected $1"
+    l
+}
+
 # sync mailstore
 sy() {
     if [[ "$1" == "-q" ]]; then
@@ -67,3 +74,32 @@ sy() {
         mbsync -V -D gmail | less
     fi
 }
+
+prompt="? "
+echo -n "${prompt}"
+while key="$(getkey)"; do
+    echo "${key}"
+    case $key in
+        g)
+            key="$(getkey)"
+            case $key in
+                g) choose good ;;
+                i) choose inbox ;;
+                p) choose spam ;;
+                s) choose best ;;
+                t) choose better ;;
+                *) echo "Unknown folder: ${key}" ;;
+            esac
+            ;;
+        l) l ;;
+        s) s ;;
+        q) exit ;;
+        x) ex -q ;;
+        y) sy -q;;
+
+        Ctrl-Y) sy ;;
+        Ctrl-X) eq ;;
+        *) echo "Unknown command: ${key}"
+    esac
+    echo -n "${prompt}"
+done
