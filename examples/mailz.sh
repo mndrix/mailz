@@ -16,7 +16,7 @@ ex() {
 l() {
     if [[ -d new && -d cur ]]; then
         mv new/* cur/
-        rg --with-filename --no-line-number '^(Subject|From): ' cur
+        rg --with-filename --no-line-number --max-count 2 '^(Subject|From): ' cur
     else
         s
     fi
@@ -35,10 +35,10 @@ m() {
 
 # view a particular email
 p() {
-    readonly unique="$(mailz unique $1)"
+    local unique="$(mailz unique $(mailz resolve $1))"
     # TODO 1="$(mailz cur ${unique})"
     mailz set-flags +S "${unique}"
-    readonly path="$(mailz resolve ${unique})"
+    local path="$(mailz resolve ${unique})"
     less -p '^(Subject|From):' "${path}"
 }
 
