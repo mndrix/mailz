@@ -63,10 +63,10 @@ func Dispatch(args []string) error {
 		err = CommandCount(args[1:])
 	case "find":
 		err = CommandFind(args[1:])
+	case "flags":
+		err = CommandFlags(args[1:])
 	case "resolve":
 		err = CommandResolve(args[1:])
-	case "set-flags":
-		err = CommandSetFlags(args[1:])
 	case "unique":
 		err = CommandUnique(args[1:])
 	default:

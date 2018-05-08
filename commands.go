@@ -1,5 +1,6 @@
 package mailz // import "github.com/mndrix/mailz"
 import (
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -23,7 +24,6 @@ func Unique(path string) (string, error) {
 }
 
 var ErrAmbiguousRef = errors.New("Ref matches multiple files")
-var ErrNoSuchRef = errors.New("Ref matches zero files")
 
 func Resolve(ref string) (string, error) {
 	// ref might be a full path
@@ -48,7 +48,7 @@ func Resolve(ref string) (string, error) {
 
 	switch len(matches) {
 	case 0:
-		return "", ErrNoSuchRef
+		return "", fmt.Errorf("Ref matches zero files: %q", ref)
 	case 1:
 		return matches[0], nil
 	default:
@@ -275,39 +275,35 @@ func CommandFind(folders []string) error {
 	return nil
 }
 
-// CommandSetFlags changes the flags for each message.  For example,
+// CommandFlags changes the flags for each message.  For example,
 //
-//    mailz set-flags +SRT -F path/to/cur/message
+//    mailz flags -s SRT -c F path/to/cur/message
 //
-// adds the flags S, R, and T while removing the F flag.
-func CommandSetFlags(args []string) error {
-	// parse arguments
-	var plus, minus []rune
+// sets the flags S, R, and T while clearing the F flag.
+func CommandFlags(args []string) error {
+	fs := flag.NewFlagSet("flags", flag.ContinueOnError)
+	var clear = fs.String("c", "", `A string of flags to clear, like "ST"`)
+	var set = fs.String("s", "", `A string of flags to set, like "ST"`)
+	if err := fs.Parse(args); err != nil {
+		return errors.Wrap(err, "parsing command line flags")
+	}
+	plus := []rune(*set)
+	minus := []rune(*clear)
+
 	var paths []*Path
-	for _, arg := range args {
+	for _, arg := range flag.Args() {
 		if arg == "" {
 			continue
 		}
-		switch arg[0] {
-		case '-':
-			for _, flag := range arg[1:] {
-				minus = append(minus, flag)
-			}
-		case '+':
-			for _, flag := range arg[1:] {
-				plus = append(plus, flag)
-			}
-		default:
-			path, err := Resolve(arg)
-			if err != nil {
-				return errors.Wrap(err, "resolve ref")
-			}
-			p, err := ParsePath(path)
-			if err != nil {
-				return errors.Wrap(err, "parse path")
-			}
-			paths = append(paths, p)
+		path, err := Resolve(arg)
+		if err != nil {
+			return errors.Wrap(err, "resolve ref")
 		}
+		p, err := ParsePath(path)
+		if err != nil {
+			return errors.Wrap(err, "parse path")
+		}
+		paths = append(paths, p)
 	}
 
 	// calculate new names

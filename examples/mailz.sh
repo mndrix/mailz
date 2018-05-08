@@ -2,7 +2,7 @@ MAIL=~/Mail
 
 # delete a message
 d() {
-    mailz set-flags +T "$1"
+    mailz flags -s T "$1"
 }
 
 # expunge mailstore
@@ -32,14 +32,14 @@ c() {
 # move a message to another folder
 m() {
     mailz copy "$1" "$2" && \
-        mailz set-flags +T "$1"
+        mailz flags -s T "$1"
 }
 
 # view a particular email
 p() {
     local unique="$(mailz unique $(mailz resolve $1))"
     # TODO 1="$(mailz cur ${unique})"
-    mailz set-flags +S "${unique}"
+    mailz flags -s S "${unique}"
     local path="$(mailz resolve ${unique})"
     less -p '^(Subject|From):' "${path}"
 }
