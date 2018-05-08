@@ -129,11 +129,17 @@ func CommandCopy(args []string) error {
 }
 
 func CommandCount(folders []string) error {
+	fs := flag.NewFlagSet("count", flag.ContinueOnError)
+	q := &Query{}
+	allowQueryArguments(fs, q)
+	if err := fs.Parse(folders); err != nil {
+		return errors.Wrap(err, "parsing command line flags")
+	}
+	folders = fs.Args()
 	if len(folders) == 0 {
 		return errors.New("Must specify a folder")
 	}
 
-	q := &Query{}
 	for _, folder := range folders {
 		q.Root = folder
 		count := 0
@@ -223,11 +229,15 @@ type Query struct {
 	FlagSet flagList
 }
 
+func allowQueryArguments(fs *flag.FlagSet, q *Query) {
+	fs.Var(&q.FlagClear, "c", `Match when these flags are clear, like "ST"`)
+	fs.Var(&q.FlagSet, "s", `Match when these flags are set, like "ST"`)
+}
+
 func CommandFind(folders []string) error {
 	fs := flag.NewFlagSet("find", flag.ContinueOnError)
 	query := &Query{}
-	fs.Var(&query.FlagClear, "c", `Match when these flags are clear, like "ST"`)
-	fs.Var(&query.FlagSet, "s", `Match when these flags are set, like "ST"`)
+	allowQueryArguments(fs, query)
 	if err := fs.Parse(folders); err != nil {
 		return errors.Wrap(err, "parsing command line flags")
 	}
