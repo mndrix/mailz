@@ -227,6 +227,54 @@ func CommandResolve(refs []string) error {
 
 }
 
+func CommandFind(folders []string) error {
+	if len(folders) == 0 {
+		folders = []string{"."}
+	}
+
+	// iterate messages in a single file system directory
+	walkDir := func(subdir string) error {
+		dir, err := os.Open(subdir)
+		if err != nil {
+			return err
+		}
+		defer dir.Close()
+		for {
+			entries, err := dir.Readdir(2) // TODO increase after testing
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return errors.Wrap(err, "reading directory entries")
+			}
+			for _, entry := range entries {
+				if entry.IsDir() {
+					continue
+				}
+				p := filepath.ToSlash(filepath.Join(subdir, entry.Name()))
+				path, err := ParsePath(p)
+				if err == nil {
+					fmt.Println(path)
+				}
+			}
+		}
+		return nil
+	}
+
+	for _, folder := range folders {
+		err := walkDir(filepath.Join(folder, "cur"))
+		if err != nil {
+			return errors.Wrap(err, "Counting cur")
+		}
+		err = walkDir(filepath.Join(folder, "new"))
+		if err != nil {
+			return errors.Wrap(err, "Counting new")
+		}
+	}
+
+	return nil
+}
+
 // CommandSetFlags changes the flags for each message.  For example,
 //
 //    mailz set-flags +SRT -F path/to/cur/message
