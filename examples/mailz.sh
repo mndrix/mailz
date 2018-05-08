@@ -55,16 +55,7 @@ r() {
 s() {
     (
         cd "${MAIL}"
-        local unread=$(mktemp -t mailz-unread-XXXXXXXX)
-        local seen=$(mktemp -t mailz-seen-XXXXXXXX)
-        local trashed=$(mktemp -t mailz-trashed-XXXXXXXX)
-        local joined=$(mktemp -t mailz-joined-XXXXXXXX)
-        mailz count      -c ST best better good inbox spam >>"${unread}"
-        mailz count -s S -c T  best better good inbox spam >>"${seen}"
-        mailz count -s T       best better good inbox spam >>"${trashed}"
-        join "${unread}" "${seen}" >>"${joined}"
-        join "${joined}" "${trashed}" | rs 0 4 | sed -E 's/ 0( |$)/   /g'
-        rm -f "${unread}" "${seen}" "${trashed}" "${joined}"
+        mailz count -c T  best better good inbox spam
     )
 }
 
