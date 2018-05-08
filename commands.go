@@ -227,10 +227,23 @@ func CommandResolve(refs []string) error {
 
 }
 
+type Query struct {
+	// Root is the top-level directory where the search should begin.
+	Root string
+
+	// FlagClear is a slice of flags which must be clear (not set) for
+	// a message to match.
+	FlagClear []rune
+
+	// FlagSet is a slice of flags which must be set for a message to
+	// match.
+	FlagSet []rune
+}
+
 func CommandFind(folders []string) error {
 	fs := flag.NewFlagSet("find", flag.ContinueOnError)
 	var clear = fs.String("c", "", `Match when these flags are clear, like "ST"`)
-	var set = fs.String("s", "", `Match whene these flags are set, like "ST"`)
+	var set = fs.String("s", "", `Match when these flags are set, like "ST"`)
 	if err := fs.Parse(folders); err != nil {
 		return errors.Wrap(err, "parsing command line flags")
 	}
@@ -238,9 +251,23 @@ func CommandFind(folders []string) error {
 	if len(folders) == 0 {
 		folders = []string{"."}
 	}
-	whereClear := []rune(*clear)
-	whereSet := []rune(*set)
+	query := &Query{
+		FlagClear: []rune(*clear),
+		FlagSet:   []rune(*set),
+	}
+	for _, folder := range folders {
+		query.Root = folder
+		err := Find(query, func(path *Path) {
+			fmt.Println(path)
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
+func Find(query *Query, fn func(*Path)) error {
 	// iterate messages in a single file system directory
 	walkDir := func(subdir string) error {
 		dir, err := os.Open(subdir)
@@ -268,32 +295,30 @@ func CommandFind(folders []string) error {
 				}
 
 				// are flag conditions met?
-				for _, flag := range whereClear {
+				for _, flag := range query.FlagClear {
 					if !path.IsClear(flag) {
 						continue ENTRY
 					}
 				}
-				for _, flag := range whereSet {
+				for _, flag := range query.FlagSet {
 					if !path.IsSet(flag) {
 						continue ENTRY
 					}
 				}
 
-				fmt.Println(path)
+				fn(path)
 			}
 		}
 		return nil
 	}
 
-	for _, folder := range folders {
-		err := walkDir(filepath.Join(folder, "cur"))
-		if err != nil {
-			return errors.Wrap(err, "Counting cur")
-		}
-		err = walkDir(filepath.Join(folder, "new"))
-		if err != nil {
-			return errors.Wrap(err, "Counting new")
-		}
+	err := walkDir(filepath.Join(query.Root, "cur"))
+	if err != nil {
+		return errors.Wrap(err, "Counting cur")
+	}
+	err = walkDir(filepath.Join(query.Root, "new"))
+	if err != nil {
+		return errors.Wrap(err, "Counting new")
 	}
 
 	return nil
