@@ -95,7 +95,9 @@ while key="$(getkey)"; do
         s) s ;;
         q) exit ;;
         x) ex -q ;;
-        y) sy -q;;
+        y) sy -q
+           s
+           ;;
 
         Ctrl-Y) sy ;;
         Ctrl-X) eq ;;
