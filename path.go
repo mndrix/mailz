@@ -69,3 +69,13 @@ func (p *Path) ClearFlag(flag rune) {
 func (p *Path) SetFlag(flag rune) {
 	p.Flags[flag] = true
 }
+
+// IsClear returns true if the given flag is clear (that is, not set).
+func (p *Path) IsClear(flag rune) bool {
+	return !p.Flags[flag]
+}
+
+// IsSet returns true if the given flag is set.
+func (p *Path) IsSet(flag rune) bool {
+	return p.Flags[flag]
+}

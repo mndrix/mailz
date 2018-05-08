@@ -228,9 +228,18 @@ func CommandResolve(refs []string) error {
 }
 
 func CommandFind(folders []string) error {
+	fs := flag.NewFlagSet("find", flag.ContinueOnError)
+	var clear = fs.String("c", "", `Match when these flags are clear, like "ST"`)
+	var set = fs.String("s", "", `Match whene these flags are set, like "ST"`)
+	if err := fs.Parse(folders); err != nil {
+		return errors.Wrap(err, "parsing command line flags")
+	}
+	folders = fs.Args()
 	if len(folders) == 0 {
 		folders = []string{"."}
 	}
+	whereClear := []rune(*clear)
+	whereSet := []rune(*set)
 
 	// iterate messages in a single file system directory
 	walkDir := func(subdir string) error {
@@ -247,15 +256,30 @@ func CommandFind(folders []string) error {
 			if err != nil {
 				return errors.Wrap(err, "reading directory entries")
 			}
+		ENTRY:
 			for _, entry := range entries {
 				if entry.IsDir() {
 					continue
 				}
 				p := filepath.ToSlash(filepath.Join(subdir, entry.Name()))
 				path, err := ParsePath(p)
-				if err == nil {
-					fmt.Println(path)
+				if err != nil {
+					continue
 				}
+
+				// are flag conditions met?
+				for _, flag := range whereClear {
+					if !path.IsClear(flag) {
+						continue ENTRY
+					}
+				}
+				for _, flag := range whereSet {
+					if !path.IsSet(flag) {
+						continue ENTRY
+					}
+				}
+
+				fmt.Println(path)
 			}
 		}
 		return nil
