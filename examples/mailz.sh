@@ -99,6 +99,7 @@ while key="$(getkey)"; do
            s
            ;;
 
+        Ctrl-d) exit ;;
         Ctrl-Y) sy ;;
         Ctrl-X) eq ;;
         *) echo "Unknown command: ${key}"
