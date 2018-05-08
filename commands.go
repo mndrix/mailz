@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/mndrix/rand"
 	"github.com/pkg/errors"
@@ -198,33 +199,41 @@ func CommandResolve(refs []string) error {
 
 }
 
+type flagList []rune
+
+func (fs *flagList) String() string {
+	sort.Sort(ByFlag(*fs))
+	return string(*fs)
+}
+func (fs *flagList) Set(arg string) error {
+	*fs = []rune(arg)
+	return nil
+}
+
 type Query struct {
 	// Root is the top-level directory where the search should begin.
 	Root string
 
 	// FlagClear is a slice of flags which must be clear (not set) for
 	// a message to match.
-	FlagClear []rune
+	FlagClear flagList
 
 	// FlagSet is a slice of flags which must be set for a message to
 	// match.
-	FlagSet []rune
+	FlagSet flagList
 }
 
 func CommandFind(folders []string) error {
 	fs := flag.NewFlagSet("find", flag.ContinueOnError)
-	var clear = fs.String("c", "", `Match when these flags are clear, like "ST"`)
-	var set = fs.String("s", "", `Match when these flags are set, like "ST"`)
+	query := &Query{}
+	fs.Var(&query.FlagClear, "c", `Match when these flags are clear, like "ST"`)
+	fs.Var(&query.FlagSet, "s", `Match when these flags are set, like "ST"`)
 	if err := fs.Parse(folders); err != nil {
 		return errors.Wrap(err, "parsing command line flags")
 	}
 	folders = fs.Args()
 	if len(folders) == 0 {
 		folders = []string{"."}
-	}
-	query := &Query{
-		FlagClear: []rune(*clear),
-		FlagSet:   []rune(*set),
 	}
 	for _, folder := range folders {
 		query.Root = folder
