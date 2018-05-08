@@ -55,7 +55,7 @@ r() {
 s() {
     (
         cd "${MAIL}"
-        mailz count best better good inbox spam | awk '$2==0{$2=""} {printf "%4s %s\n", $2, $1}'
+        mailz count best better good inbox spam
     )
 }
 
