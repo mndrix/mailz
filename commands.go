@@ -132,46 +132,17 @@ func CommandCount(folders []string) error {
 		return errors.New("Must specify a folder")
 	}
 
-	// count messages in a single file system directory
-	countDir := func(folder, subdir string) (int, error) {
-		path := filepath.Join(folder, subdir)
-		dir, err := os.Open(path)
-		if err != nil {
-			return 0, err
-		}
-		defer dir.Close()
-		count := 0
-		for {
-			entries, err := dir.Readdir(2) // TODO increase after testing
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return 0, errors.Wrap(err, "reading directory entries")
-			}
-			for _, entry := range entries {
-				if entry.IsDir() {
-					continue
-				}
-				_, err := ParsePath(subdir + "/" + entry.Name())
-				if err == nil {
-					count++
-				}
-			}
-		}
-		return count, nil
-	}
-
+	q := &Query{}
 	for _, folder := range folders {
-		curN, err := countDir(folder, "cur")
+		q.Root = folder
+		count := 0
+		err := Find(q, func(p *Path) {
+			count++
+		})
+		fmt.Printf("%s\t%d\n", folder, count)
 		if err != nil {
-			return errors.Wrap(err, "Counting cur")
+			return err
 		}
-		newN, err := countDir(folder, "new")
-		if err != nil {
-			return errors.Wrap(err, "Counting new")
-		}
-		fmt.Printf("%s\t%d\n", folder, curN+newN)
 	}
 
 	return nil
