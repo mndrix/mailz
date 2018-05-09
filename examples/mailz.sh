@@ -53,7 +53,7 @@ s() {
 # select a folder
 choose() {
     cd "${MAIL}/$1"
-    echo "Selected $1"
+    echo "$1"
     l
 }
 
@@ -74,6 +74,7 @@ while key="$(getkey)"; do
     echo "${key}"
     case $key in
         g)
+            echo -n 'Which folder? '
             key="$(getkey)"
             case $key in
                 g) choose good ;;
