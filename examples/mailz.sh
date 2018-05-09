@@ -5,17 +5,8 @@ d() {
     mailz flags -s T "$1"
 }
 
-# expunge mailstore
-ex() {
-    if [[ "$1" == "-q" ]]; then
-        mbsync ${opts} --expunge --noop gmail
-    else
-        mbsync -V -D --expunge --noop gmail
-    fi
-}
-
 # list emails
-l() {
+list() {
     if [[ -d new && -d cur ]]; then
         mailz cur .
         mailz find -c T | xargs mailz head -s Received -s From -s Subject
@@ -67,11 +58,13 @@ choose() {
 }
 
 # sync mailstore
-sy() {
+sync() {
     if [[ "$1" == "-q" ]]; then
         mbsync gmail
+        mbsync --expunge --noop gmail >/dev/null &
     else 
         mbsync -V -D gmail | less
+        mbsync -V -D --expunge --noop gmail >/dev/null &
     fi
 }
 
@@ -91,17 +84,15 @@ while key="$(getkey)"; do
                 *) echo "Unknown folder: ${key}" ;;
             esac
             ;;
-        l) l ;;
+        l) list ;;
         s) s ;;
         q) exit ;;
-        x) ex -q ;;
-        y) sy -q
+        y) sync -q
            s
            ;;
 
         Ctrl-d) exit ;;
-        Ctrl-Y) sy ;;
-        Ctrl-X) eq ;;
+        Ctrl-Y) sync ;;
         *) echo "Unknown command: ${key}"
     esac
     echo -n "${prompt}"
