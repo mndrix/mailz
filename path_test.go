@@ -22,3 +22,25 @@ func TestFlagString(t *testing.T) {
 		}
 	}
 }
+
+func TestCur(t *testing.T) {
+	tests := [][]string{
+		{`new/foo:2,`, `cur/foo:2,`},
+		{`spam/new/baz:2,`, `spam/cur/baz:2,`},
+	}
+
+	for _, test := range tests {
+		path, err := ParsePath(test[0])
+		if err != nil {
+			t.Errorf("can't parse %q: %s", test[0], err)
+			continue
+		}
+
+		expected := test[1]
+		path.Cur()
+		got := path.String()
+		if got != expected {
+			t.Errorf("%q != %q", got, expected)
+		}
+	}
+}

@@ -155,6 +155,35 @@ func CommandCount(folders []string) error {
 	return nil
 }
 
+func CommandCur(folders []string) error {
+	q := &Query{OnlyNew: true}
+	errs := make([]error, 0)
+	for _, folder := range folders {
+		q.Root = folder
+		err := Find(q, func(p *Path) {
+			src := p.String()
+			p.Cur()
+			dst := p.String()
+			debugf("mv %q %q", src, dst)
+			err := os.Rename(src, dst)
+			if err != nil {
+				errs = append(errs, err)
+			}
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(errs) != 0 {
+		for _, err := range errs {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+		}
+		return errors.New("some operations failed")
+	}
+	return nil
+}
+
 const alpha32 = `0123456789abcdefghjkmnpqrstuvwxy`
 
 func GenerateUnique() string {
@@ -227,11 +256,16 @@ type Query struct {
 	// FlagSet is a slice of flags which must be set for a message to
 	// match.
 	FlagSet flagList
+
+	// OnlyNew, when true, matches only newly arrived messages.  That
+	// is, messages inside the maildir's new/ directory.
+	OnlyNew bool
 }
 
 func allowQueryArguments(fs *flag.FlagSet, q *Query) {
 	fs.Var(&q.FlagClear, "c", `Match when these flags are clear, like "ST"`)
 	fs.Var(&q.FlagSet, "s", `Match when these flags are set, like "ST"`)
+	fs.BoolVar(&q.OnlyNew, "N", false, `Match only newly arrived messages`)
 }
 
 func CommandFind(folders []string) error {
@@ -257,9 +291,22 @@ func CommandFind(folders []string) error {
 	return nil
 }
 
+func debugf(format string, args ...interface{}) {
+	if true {
+		return
+	}
+	fmt.Fprintf(os.Stderr, format+"\n", args...)
+}
+
 func Find(query *Query, fn func(*Path)) error {
 	// iterate messages in a single file system directory
 	walkDir := func(subdir string) error {
+		// are we only searching the new/ directory?
+		if query.OnlyNew && filepath.Base(subdir) != "new" {
+			debugf("OnlyNew skip: %q", subdir)
+			return nil
+		}
+
 		dir, err := os.Open(subdir)
 		if err != nil {
 			return err

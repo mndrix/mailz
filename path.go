@@ -79,3 +79,8 @@ func (p *Path) IsClear(flag rune) bool {
 func (p *Path) IsSet(flag rune) bool {
 	return p.Flags[flag]
 }
+
+// Cur changes the path from new/ to cur/
+func (p *Path) Cur() {
+	p.State = "cur"
+}

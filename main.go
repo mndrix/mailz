@@ -61,6 +61,8 @@ func Dispatch(args []string) error {
 		err = CommandCopy(args[1:])
 	case "count":
 		err = CommandCount(args[1:])
+	case "cur":
+		err = CommandCur(args[1:])
 	case "find":
 		err = CommandFind(args[1:])
 	case "flags":

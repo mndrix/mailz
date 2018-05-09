@@ -17,7 +17,7 @@ ex() {
 # list emails
 l() {
     if [[ -d new && -d cur ]]; then
-        mv new/* cur/
+        mailz cur .
         mailz find -c T | xargs rg --with-filename --no-line-number --max-count 2 '^(Subject|From): ' 
     else
         s
