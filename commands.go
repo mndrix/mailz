@@ -3,9 +3,11 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"net/mail"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/mndrix/rand"
 	"github.com/pkg/errors"
@@ -418,6 +420,53 @@ func CommandFlags(args []string) error {
 		if err != nil {
 			return errors.Wrap(err, "renaming")
 		}
+	}
+
+	return nil
+}
+
+func CommandHead(args []string) error {
+	// parse command line arguments
+	columns := make([]string, 0)
+	paths := make([]*Path, 0)
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		switch arg {
+		case "-s":
+			i++
+			if i >= len(args) {
+				return errors.New("-s needs an argument")
+			}
+			columns = append(columns, args[i])
+		default:
+			resolved, err := Resolve(arg)
+			if err != nil {
+				return errors.Wrap(err, "resolving argument")
+			}
+			path, err := ParsePath(resolved)
+			if err != nil {
+				return errors.Wrap(err, "parsing path")
+			}
+			paths = append(paths, path)
+		}
+	}
+
+	// parse the header from each path
+	values := make([]string, len(columns))
+	for _, path := range paths {
+		r, err := os.Open(path.String())
+		if err != nil {
+			return errors.Wrap(err, "open")
+		}
+		msg, err := mail.ReadMessage(r)
+		if err != nil {
+			return errors.Wrap(err, "reading message")
+		}
+		r.Close()
+		for i, column := range columns {
+			values[i] = msg.Header.Get(column)
+		}
+		fmt.Println(strings.Join(values, "\t"))
 	}
 
 	return nil

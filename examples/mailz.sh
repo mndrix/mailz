@@ -18,7 +18,7 @@ ex() {
 l() {
     if [[ -d new && -d cur ]]; then
         mailz cur .
-        mailz find -c T | xargs rg --with-filename --no-line-number --max-count 2 '^(Subject|From): ' 
+        mailz find -c T | xargs mailz head -s Received -s From -s Subject
     else
         s
     fi
