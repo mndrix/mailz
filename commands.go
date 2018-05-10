@@ -467,34 +467,23 @@ func CommandHead(args []string) error {
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
 		switch arg {
-		case "-a":
+		case "-a", "-s", "-t":
 			i++
 			if i >= len(args) {
-				return errors.New("-a needs an argument")
+				return errors.New(arg + " needs an argument")
 			}
 			column := columnSpec{
-				Name:   args[i],
-				Filter: typeAddress,
+				Name: args[i],
 			}
-			columns = append(columns, column)
-		case "-s":
-			i++
-			if i >= len(args) {
-				return errors.New("-s needs an argument")
-			}
-			column := columnSpec{
-				Name:   args[i],
-				Filter: typeString,
-			}
-			columns = append(columns, column)
-		case "-t":
-			i++
-			if i >= len(args) {
-				return errors.New("-t needs an argument")
-			}
-			column := columnSpec{
-				Name:   args[i],
-				Filter: typeTime,
+			switch arg {
+			case "-a":
+				column.Filter = typeAddress
+			case "-s":
+				column.Filter = typeString
+			case "-t":
+				column.Filter = typeTime
+			default:
+				panic("incomplete case statement")
 			}
 			columns = append(columns, column)
 		default:
