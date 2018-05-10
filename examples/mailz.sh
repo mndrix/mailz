@@ -9,7 +9,10 @@ d() {
 list() {
     if [[ -d new && -d cur ]]; then
         mailz cur .
-        mailz find -c T | xargs mailz head -s Received -s From -s Subject
+        mailz find -c T \
+            | xargs mailz head -s Subject -s From -t Received \
+            | sort -t "\t" -f -k1 -k3 \
+            | rs -c -z 0 3
     else
         s
     fi
@@ -54,7 +57,7 @@ s() {
 choose() {
     cd "${MAIL}/$1"
     echo "$1"
-    l
+    list
 }
 
 # sync mailstore

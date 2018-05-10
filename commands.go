@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/mndrix/rand"
 	"github.com/pkg/errors"
@@ -427,7 +428,23 @@ func CommandFlags(args []string) error {
 
 type columnSpec struct {
 	Name   string
-	Filter func(string) string
+	Filter func(string, string) string
+}
+
+func typeString(h, v string) string {
+	return v
+}
+
+func typeTime(h, v string) string {
+	if strings.ToLower(h) == "received" {
+		i := strings.LastIndex(v, ";")
+		v = strings.TrimSpace(v[i+1:])
+	}
+	t, err := mail.ParseDate(v)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Invalid date: %q\n", v)
+	}
+	return t.UTC().Format(time.RFC3339)
 }
 
 func CommandHead(args []string) error {
@@ -444,7 +461,17 @@ func CommandHead(args []string) error {
 			}
 			column := columnSpec{
 				Name:   args[i],
-				Filter: func(s string) string { return s },
+				Filter: typeString,
+			}
+			columns = append(columns, column)
+		case "-t":
+			i++
+			if i >= len(args) {
+				return errors.New("-t needs an argument")
+			}
+			column := columnSpec{
+				Name:   args[i],
+				Filter: typeTime,
 			}
 			columns = append(columns, column)
 		default:
@@ -474,7 +501,7 @@ func CommandHead(args []string) error {
 		r.Close()
 		for i, column := range columns {
 			raw := msg.Header.Get(column.Name)
-			values[i] = column.Filter(raw)
+			values[i] = column.Filter(column.Name, raw)
 		}
 		fmt.Println(strings.Join(values, "\t"))
 	}
