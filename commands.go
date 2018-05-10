@@ -452,7 +452,7 @@ func typeAddressName(h, v string) string {
 	}
 	strs := make([]string, len(addresses))
 	for i, address := range addresses {
-		strs[i] = address.Name
+		strs[i] = strings.Replace(address.Name, "\t", "        ", -1)
 	}
 	return strings.Join(strs, ", ")
 }
