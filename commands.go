@@ -431,6 +431,19 @@ type columnSpec struct {
 	Filter func(string, string) string
 }
 
+func typeAddress(h, v string) string {
+	addresses, err := mail.ParseAddressList(v)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Invalid address: %q\n", v)
+		return "Error <error>"
+	}
+	strs := make([]string, len(addresses))
+	for i, address := range addresses {
+		strs[i] = address.String()
+	}
+	return strings.Join(strs, ", ")
+}
+
 func typeString(h, v string) string {
 	return v
 }
@@ -454,6 +467,16 @@ func CommandHead(args []string) error {
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
 		switch arg {
+		case "-a":
+			i++
+			if i >= len(args) {
+				return errors.New("-a needs an argument")
+			}
+			column := columnSpec{
+				Name:   args[i],
+				Filter: typeAddress,
+			}
+			columns = append(columns, column)
 		case "-s":
 			i++
 			if i >= len(args) {
