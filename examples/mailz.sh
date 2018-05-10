@@ -11,8 +11,24 @@ list() {
         mailz cur .
         mailz find -c T \
             | xargs mailz head -s Subject -N From -E From -t Received \
-            | sort -t "\t" -f -k1 -k3 \
-            | rs -c -z 0 4
+            | sort -t "\t" -f -k1 -k4 \
+            | awk -F "\t" '
+                BEGIN { OFS=FS }
+                {
+                    if (length($1)>60)
+                        $1=substr($1,1,60);
+                    if ($1=="")
+                        $1="(no subject)";
+                }
+                {
+                    if (length($2)>0 && length($2)<length($3))
+                        from=$2;
+                    else
+                        from=$3;
+                }
+                { print $1, from, $4 }
+              ' \
+            | rs -c -z 0 3
     else
         s
     fi
