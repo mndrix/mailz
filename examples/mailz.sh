@@ -47,7 +47,7 @@ list() {
               ' \
             | rs -c -z 0 3
     else
-        s
+        summary
     fi
 }
 
@@ -79,10 +79,10 @@ r() {
 }
 
 # summarize folder contents
-s() {
+summary() {
     (
         cd "${MAIL}"
-        mailz count -c T  best better good inbox spam
+        mailz count -c T  best better good inbox spam | sed -E 's/	0$//'
     )
 }
 
@@ -121,10 +121,10 @@ while key="$(getkey)"; do
             esac
             ;;
         l) list ;;
-        s) s ;;
+        s) summary ;;
         q) exit ;;
         y) sync -q
-           s
+           summary
            ;;
 
         Ctrl-d) exit ;;
