@@ -13,20 +13,32 @@ list() {
             | xargs mailz head -s Subject -N From -E From -t Received \
             | sort -t "\t" -f -k1 -k4 \
             | awk -F "\t" '
-                BEGIN { OFS=FS }
+                BEGIN { OFS=FS; ditto="  \"" }
                 {
-                    if (length($1)>60)
-                        $1=substr($1,1,60);
-                    if ($1=="")
-                        $1="(no subject)";
+                    subject=$1;
+                    date=$4
+                }
+                {
+                    original_subject=subject
+                    if (subject==previous_subject)
+                        subject=ditto
+                    if (length(subject)>60)
+                        subject=substr(subject,1,60);
+                    if (subject=="")
+                        subject="(no subject)";
+                    previous_subject=original_subject;
                 }
                 {
                     if (length($2)>0 && length($2)<length($3))
                         from=$2;
                     else
                         from=$3;
+                    original_from=from
+                    if (from==previous_from)
+                        from=ditto
+                    previous_from=original_from
                 }
-                { print $1, from, $4 }
+                { print subject, from, date; }
               ' \
             | rs -c -z 0 3
     else
