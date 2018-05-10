@@ -425,9 +425,14 @@ func CommandFlags(args []string) error {
 	return nil
 }
 
+type columnSpec struct {
+	Name   string
+	Filter func(string) string
+}
+
 func CommandHead(args []string) error {
 	// parse command line arguments
-	columns := make([]string, 0)
+	columns := make([]columnSpec, 0)
 	paths := make([]*Path, 0)
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
@@ -437,7 +442,11 @@ func CommandHead(args []string) error {
 			if i >= len(args) {
 				return errors.New("-s needs an argument")
 			}
-			columns = append(columns, args[i])
+			column := columnSpec{
+				Name:   args[i],
+				Filter: func(s string) string { return s },
+			}
+			columns = append(columns, column)
 		default:
 			resolved, err := Resolve(arg)
 			if err != nil {
@@ -464,7 +473,8 @@ func CommandHead(args []string) error {
 		}
 		r.Close()
 		for i, column := range columns {
-			values[i] = msg.Header.Get(column)
+			raw := msg.Header.Get(column.Name)
+			values[i] = column.Filter(raw)
 		}
 		fmt.Println(strings.Join(values, "\t"))
 	}
