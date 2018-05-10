@@ -517,6 +517,9 @@ func CommandHead(args []string) error {
 			}
 			columns = append(columns, column)
 		default:
+			if strings.HasPrefix(arg, "-") {
+				return errors.New("invalid argument: " + arg)
+			}
 			resolved, err := Resolve(arg)
 			if err != nil {
 				return errors.Wrap(err, "resolving argument")
