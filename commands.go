@@ -444,6 +444,32 @@ func typeAddress(h, v string) string {
 	return strings.Join(strs, ", ")
 }
 
+func typeAddressName(h, v string) string {
+	addresses, err := mail.ParseAddressList(v)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Invalid address: %q\n", v)
+		return "Error <error>"
+	}
+	strs := make([]string, len(addresses))
+	for i, address := range addresses {
+		strs[i] = address.Name
+	}
+	return strings.Join(strs, ", ")
+}
+
+func typeAddressEmail(h, v string) string {
+	addresses, err := mail.ParseAddressList(v)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Invalid address: %q\n", v)
+		return "Error <error>"
+	}
+	strs := make([]string, len(addresses))
+	for i, address := range addresses {
+		strs[i] = address.Address
+	}
+	return strings.Join(strs, ", ")
+}
+
 func typeString(h, v string) string {
 	return v
 }
@@ -467,7 +493,7 @@ func CommandHead(args []string) error {
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
 		switch arg {
-		case "-a", "-s", "-t":
+		case "-a", "-E", "-N", "-s", "-t":
 			i++
 			if i >= len(args) {
 				return errors.New(arg + " needs an argument")
@@ -478,6 +504,10 @@ func CommandHead(args []string) error {
 			switch arg {
 			case "-a":
 				column.Filter = typeAddress
+			case "-E":
+				column.Filter = typeAddressEmail
+			case "-N":
+				column.Filter = typeAddressName
 			case "-s":
 				column.Filter = typeString
 			case "-t":

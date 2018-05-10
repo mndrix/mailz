@@ -10,9 +10,9 @@ list() {
     if [[ -d new && -d cur ]]; then
         mailz cur .
         mailz find -c T \
-            | xargs mailz head -s Subject -a From -t Received \
+            | xargs mailz head -s Subject -N From -E From -t Received \
             | sort -t "\t" -f -k1 -k3 \
-            | rs -c -z 0 3
+            | rs -c -z 0 4
     else
         s
     fi
