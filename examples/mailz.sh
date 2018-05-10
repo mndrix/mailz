@@ -5,6 +5,11 @@ d() {
     mailz flags -s T "$1"
 }
 
+# display a prompt for input
+prompt() {
+    printf "\e[0;34m${1}? \e[0m"
+}
+
 # list emails
 list() {
     if [[ -d new && -d cur ]]; then
@@ -99,13 +104,12 @@ sync() {
     fi
 }
 
-prompt="? "
-echo -n "${prompt}"
+prompt
 while key="$(getkey)"; do
     echo "${key}"
     case $key in
         g)
-            echo -n 'Which folder? '
+            prompt 'Which folder'
             key="$(getkey)"
             case $key in
                 g) choose good ;;
@@ -127,5 +131,5 @@ while key="$(getkey)"; do
         Ctrl-Y) sync ;;
         *) echo "Unknown command: ${key}"
     esac
-    echo -n "${prompt}"
+    prompt
 done
