@@ -27,8 +27,8 @@ generate_list() {
     mailz find -c T \
         | xargs mailz head -s Subject -N From -E From -t Received \
         | sort -t "\t" -f -k1 -k4 \
-        | awk -F "\t" '
-                BEGIN { OFS=FS; ditto="  \"" }
+        | awk '
+                BEGIN { FS=OFS="\t"; ditto="  \"" }
                 {
                     subject=$1;
                     date=$4
