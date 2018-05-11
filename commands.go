@@ -486,6 +486,10 @@ func typeAddressEmail(p *Path, h, v string) string {
 	return strings.Join(strs, ", ")
 }
 
+func typeIdentifier(p *Path, h, v string) string {
+	return p.Unique
+}
+
 func typeString(p *Path, h, v string) string {
 	return v
 }
@@ -530,6 +534,11 @@ func CommandHead(args []string) error {
 				column.Filter = typeTime
 			default:
 				panic("incomplete case statement")
+			}
+			columns = append(columns, column)
+		case "-i":
+			column := columnSpec{
+				Filter: typeIdentifier,
 			}
 			columns = append(columns, column)
 		default:

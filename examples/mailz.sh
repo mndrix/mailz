@@ -25,25 +25,28 @@ generate_list() {
 
     mailz cur .
     mailz find -c T \
-        | xargs mailz head -s Subject -N From -E From -t Received \
+        | xargs mailz head -i -s Subject -N From -E From -t Received \
         | sort -t "\t" -f -k1 -k4 \
         | awk '
                 BEGIN { FS=OFS="\t" }
                 {
-                    subject=$1;
-                    date=$4
+                    id=$1;
+                    subject=$2;
+                    name=$3;
+                    email=$4;
+                    date=$5;
 
                     # choose shortest version of From
-                    if (length($2)>0 && length($2)<length($3))
-                        from=$2;
+                    if (length(name)>0 && length(name)<length(email))
+                        from=name;
                     else
-                        from=$3;
+                        from=email;
 
                     # indicate the selected message
                     cursor=" ";
                     if (FNR==1) cursor=">";
 
-                    print cursor, FNR, subject, from, date;
+                    print cursor, id, FNR, subject, from, date;
                 }
               '
 }
@@ -53,10 +56,11 @@ render_list() {
         BEGIN { FS=OFS="\t"; ditto="  \"" }
         {
             cursor=$1;
-            number=$2;
-            subject=$3;
-            from=$4;
-            date=$5;
+            id=$2;
+            number=$3;
+            subject=$4;
+            from=$5;
+            date=$6;
 
             original_subject=subject;
             if (subject==previous_subject)
