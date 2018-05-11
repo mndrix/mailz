@@ -167,6 +167,9 @@ func CommandCur(folders []string) error {
 			src := p.String()
 			p.Cur()
 			dst := p.String()
+			if src == dst {
+				return
+			}
 			debugf("mv %q %q", src, dst)
 			err := os.Rename(src, dst)
 			if err != nil {
