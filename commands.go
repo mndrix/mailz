@@ -359,7 +359,16 @@ func Find(query *Query, fn func(*Path)) error {
 		return nil
 	}
 
-	err := walkDir(filepath.Join(query.Root, "cur"))
+	entry, err := os.Stat(query.Root)
+	if err != nil {
+		return errors.Wrap(err, "root missing")
+	}
+	if !entry.IsDir() {
+		handleEntry(query.Root, entry)
+		return nil
+	}
+
+	err = walkDir(filepath.Join(query.Root, "cur"))
 	if err != nil {
 		return errors.Wrap(err, "Counting cur")
 	}
