@@ -43,9 +43,13 @@ list() {
                         from=ditto
                     previous_from=original_from
                 }
-                { print subject, from, date; }
+                {
+                    cursor=" ";
+                    if (FNR==1) cursor=">";
+                }
+                { print cursor, FNR, subject, from, date; }
               ' \
-            | rs -c -z 0 3
+            | rs -c -z 0 5
     else
         summary
     fi
