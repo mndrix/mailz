@@ -305,6 +305,31 @@ func debugf(format string, args ...interface{}) {
 }
 
 func Find(query *Query, fn func(*Path)) error {
+	// handle a single file system entry
+	handleEntry := func(p string, entry os.FileInfo) {
+		if entry.IsDir() {
+			return
+		}
+		path, err := ParsePath(p)
+		if err != nil {
+			return
+		}
+
+		// are flag conditions met?
+		for _, flag := range query.FlagClear {
+			if !path.IsClear(flag) {
+				return
+			}
+		}
+		for _, flag := range query.FlagSet {
+			if !path.IsSet(flag) {
+				return
+			}
+		}
+
+		fn(path)
+	}
+
 	// iterate messages in a single file system directory
 	walkDir := func(subdir string) error {
 		// are we only searching the new/ directory?
@@ -326,30 +351,9 @@ func Find(query *Query, fn func(*Path)) error {
 			if err != nil {
 				return errors.Wrap(err, "reading directory entries")
 			}
-		ENTRY:
 			for _, entry := range entries {
-				if entry.IsDir() {
-					continue
-				}
 				p := filepath.ToSlash(filepath.Join(subdir, entry.Name()))
-				path, err := ParsePath(p)
-				if err != nil {
-					continue
-				}
-
-				// are flag conditions met?
-				for _, flag := range query.FlagClear {
-					if !path.IsClear(flag) {
-						continue ENTRY
-					}
-				}
-				for _, flag := range query.FlagSet {
-					if !path.IsSet(flag) {
-						continue ENTRY
-					}
-				}
-
-				fn(path)
+				handleEntry(p, entry)
 			}
 		}
 		return nil
