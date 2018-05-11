@@ -13,8 +13,8 @@ prompt() {
 
 # list emails
 list() {
-    generate_list
-    render_list
+    generate_list >"tmp/${message_list}"
+    render_list <"tmp/${message_list}"
 }
 
 generate_list() {
@@ -58,12 +58,11 @@ generate_list() {
                     if (FNR==1) cursor=">";
                 }
                 { print cursor, FNR, subject, from, date; }
-              ' \
-        > "tmp/${message_list}"
+              '
 }
 
 render_list() {
-    rs -c -z 0 5 <"tmp/${message_list}"
+    rs -c -z 0 5
 }
 
 # copy a message to another folder
