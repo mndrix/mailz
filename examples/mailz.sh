@@ -1,4 +1,5 @@
 MAIL=~/Mail
+readonly message_list="mailz-message-list.txt"
 
 # delete a message
 d() {
@@ -12,12 +13,21 @@ prompt() {
 
 # list emails
 list() {
-    if [[ -d new && -d cur ]]; then
-        mailz cur .
-        mailz find -c T \
-            | xargs mailz head -s Subject -N From -E From -t Received \
-            | sort -t "\t" -f -k1 -k4 \
-            | awk -F "\t" '
+    generate_list
+    render_list
+}
+
+generate_list() {
+    if [[ (! -d new) || (! -d cur) ]]; then
+        summary
+        return
+    fi
+
+    mailz cur .
+    mailz find -c T \
+        | xargs mailz head -s Subject -N From -E From -t Received \
+        | sort -t "\t" -f -k1 -k4 \
+        | awk -F "\t" '
                 BEGIN { OFS=FS; ditto="  \"" }
                 {
                     subject=$1;
@@ -49,10 +59,11 @@ list() {
                 }
                 { print cursor, FNR, subject, from, date; }
               ' \
-            | rs -c -z 0 5
-    else
-        summary
-    fi
+        > "tmp/${message_list}"
+}
+
+render_list() {
+    rs -c -z 0 5 <"tmp/${message_list}"
 }
 
 # copy a message to another folder
@@ -107,6 +118,16 @@ sync() {
         mbsync -V -D --expunge --noop gmail >/dev/null &
     fi
 }
+
+# remove temporary files
+cleanup() {
+    echo -n "Cleaning up ..."
+    find $MAIL -name "${message_list}" \
+        | egrep "/tmp/${message_list}\$" \
+        | xargs rm -f
+    echo ""
+}
+trap cleanup EXIT
 
 prompt
 while key="$(getkey)"; do
