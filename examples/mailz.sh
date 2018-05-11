@@ -28,41 +28,54 @@ generate_list() {
         | xargs mailz head -s Subject -N From -E From -t Received \
         | sort -t "\t" -f -k1 -k4 \
         | awk '
-                BEGIN { FS=OFS="\t"; ditto="  \"" }
+                BEGIN { FS=OFS="\t" }
                 {
                     subject=$1;
                     date=$4
-                }
-                {
-                    original_subject=subject
-                    if (subject==previous_subject)
-                        subject=ditto
-                    if (length(subject)>60)
-                        subject=substr(subject,1,60);
-                    if (subject=="")
-                        subject="(no subject)";
-                    previous_subject=original_subject;
-                }
-                {
+
+                    # choose shortest version of From
                     if (length($2)>0 && length($2)<length($3))
                         from=$2;
                     else
                         from=$3;
-                    original_from=from
-                    if (from==previous_from)
-                        from=ditto
-                    previous_from=original_from
-                }
-                {
+
+                    # indicate the selected message
                     cursor=" ";
                     if (FNR==1) cursor=">";
+
+                    print cursor, FNR, subject, from, date;
                 }
-                { print cursor, FNR, subject, from, date; }
               '
 }
 
 render_list() {
-    rs -c -z 0 5
+    awk '
+        BEGIN { FS=OFS="\t"; ditto="  \"" }
+        {
+            cursor=$1;
+            number=$2;
+            subject=$3;
+            from=$4;
+            date=$5;
+
+            original_subject=subject;
+            if (subject==previous_subject)
+                subject=ditto
+            if (length(subject)>60)
+                subject=substr(subject,1,60);
+            if (subject=="")
+                subject="(no subject)";
+            previous_subject=original_subject;
+
+            original_from=from
+            if (from==previous_from)
+                from=ditto
+            previous_from=original_from
+
+            print cursor, number, subject, from, date;
+        }
+    ' \
+    | rs -c -z 0 5
 }
 
 # copy a message to another folder
