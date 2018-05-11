@@ -444,10 +444,10 @@ func CommandFlags(args []string) error {
 
 type columnSpec struct {
 	Name   string
-	Filter func(string, string) string
+	Filter func(*Path, string, string) string
 }
 
-func typeAddress(h, v string) string {
+func typeAddress(p *Path, h, v string) string {
 	addresses, err := mail.ParseAddressList(v)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Invalid address: %q\n", v)
@@ -460,7 +460,7 @@ func typeAddress(h, v string) string {
 	return strings.Join(strs, ", ")
 }
 
-func typeAddressName(h, v string) string {
+func typeAddressName(p *Path, h, v string) string {
 	addresses, err := mail.ParseAddressList(v)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Invalid address: %q\n", v)
@@ -473,7 +473,7 @@ func typeAddressName(h, v string) string {
 	return strings.Join(strs, ", ")
 }
 
-func typeAddressEmail(h, v string) string {
+func typeAddressEmail(p *Path, h, v string) string {
 	addresses, err := mail.ParseAddressList(v)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Invalid address: %q\n", v)
@@ -486,11 +486,11 @@ func typeAddressEmail(h, v string) string {
 	return strings.Join(strs, ", ")
 }
 
-func typeString(h, v string) string {
+func typeString(p *Path, h, v string) string {
 	return v
 }
 
-func typeTime(h, v string) string {
+func typeTime(p *Path, h, v string) string {
 	if strings.ToLower(h) == "received" {
 		i := strings.LastIndex(v, ";")
 		v = strings.TrimSpace(v[i+1:])
@@ -562,7 +562,7 @@ func CommandHead(args []string) error {
 		r.Close()
 		for i, column := range columns {
 			raw := msg.Header.Get(column.Name)
-			values[i] = column.Filter(column.Name, raw)
+			values[i] = column.Filter(path, column.Name, raw)
 		}
 		fmt.Println(strings.Join(values, "\t"))
 	}
