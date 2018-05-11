@@ -158,11 +158,11 @@ func CommandCount(folders []string) error {
 	return nil
 }
 
-func CommandCur(folders []string) error {
+func CommandCur(paths []string) error {
 	q := &Query{OnlyNew: true}
 	errs := make([]error, 0)
-	for _, folder := range folders {
-		q.Root = folder
+	for _, path := range paths {
+		q.Root = path
 		err := Find(q, func(p *Path) {
 			src := p.String()
 			p.Cur()
