@@ -360,6 +360,12 @@ func Find(query *Query, fn func(*Path)) error {
 	}
 
 	entry, err := os.Stat(query.Root)
+	if os.IsNotExist(err) {
+		query.Root, err = Resolve(query.Root)
+		if err == nil {
+			entry, err = os.Stat(query.Root)
+		}
+	}
 	if err != nil {
 		return errors.Wrap(err, "root missing")
 	}
