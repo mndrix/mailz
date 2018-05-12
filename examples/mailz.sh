@@ -1,3 +1,4 @@
+set -e
 MAIL=~/Mail
 readonly message_list="mailz-message-list.txt"
 
