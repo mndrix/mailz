@@ -396,6 +396,7 @@ func CommandFlags(args []string) error {
 	minus := []rune(*clear)
 
 	var paths []*Path
+	//fmt.Printf("flags args: %+v\n", fs.Args())
 	for _, arg := range fs.Args() {
 		if arg == "" {
 			continue
@@ -426,10 +427,10 @@ func CommandFlags(args []string) error {
 	}
 
 	// TODO remove after debugging
-	fmt.Printf("would add: %s\n", string(plus))
-	fmt.Printf("would remove: %s\n", string(minus))
-	fmt.Printf("old paths: %+v\n", oldPaths)
-	fmt.Printf("new paths: %+v\n", newPaths)
+	//fmt.Printf("would add: %s\n", string(plus))
+	//fmt.Printf("would remove: %s\n", string(minus))
+	//fmt.Printf("old paths: %+v\n", oldPaths)
+	//fmt.Printf("new paths: %+v\n", newPaths)
 
 	// rename files
 	for i := range oldPaths {
