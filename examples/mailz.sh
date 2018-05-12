@@ -94,12 +94,18 @@ m() {
         mailz flags -s T "$1"
 }
 
-# view a particular email
-p() {
-    local unique="$(mailz unique $(mailz resolve $1))"
-    # TODO 1="$(mailz cur ${unique})"
-    mailz flags -s S "${unique}"
-    local path="$(mailz resolve ${unique})"
+# display a message
+print() {
+    local id=$1
+    if [[ -z $id ]]; then
+        echo "No message selected"
+        return
+    fi
+
+    mailz cur "${id}"
+    mailz flags -s S "${id}"
+    # TODO { mailz head "${id}"; mailz body "${id}"; } | $PAGER
+    local path="$(mailz resolve ${id})"
     less -p '^(Subject|From):' "${path}"
 }
 
@@ -108,6 +114,11 @@ r() {
     echo "From someone@example.com Thu Apr 26 18:30:03 2018" >/tmp/message
     cat "$1" >>/tmp/message
     mail -f /tmp/message
+}
+
+# outputs the message ID of the first selected message if any
+selected_message() {
+    awk -F "\t" '$1==">" { print $2; exit; }' "tmp/${message_list}"
 }
 
 # summarize folder contents
@@ -163,6 +174,7 @@ while key="$(getkey)"; do
             esac
             ;;
         l) list ;;
+        p) print "$(selected_message)" ;;
         s) summary ;;
         q) exit ;;
         y) sync -q
