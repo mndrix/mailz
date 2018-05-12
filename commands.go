@@ -396,7 +396,7 @@ func CommandFlags(args []string) error {
 	minus := []rune(*clear)
 
 	var paths []*Path
-	for _, arg := range flag.Args() {
+	for _, arg := range fs.Args() {
 		if arg == "" {
 			continue
 		}
