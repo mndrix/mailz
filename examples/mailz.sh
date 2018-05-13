@@ -94,6 +94,18 @@ m() {
         mailz flags -s T "$1"
 }
 
+# unselect the first selected message. execute the given ed
+# command. select the message on the resulting line.
+move_cursor() {
+    ed -s <<EOF "tmp/${message_list}" >/dev/null || true
+/^>/
+s/^>/ /
+$1
+s/^ />/
+w
+EOF
+}
+
 # display a message
 print() {
     local id=$1
@@ -136,6 +148,10 @@ choose() {
     list
 }
 
+show_selected_line() {
+    sed -nE '/^>/{p;q;}' "tmp/${message_list}" | render_list
+}
+
 # sync mailstore
 sync() {
     if [[ "$1" == "-q" ]]; then
@@ -161,6 +177,10 @@ prompt
 while key="$(getkey)"; do
     echo "${key}"
     case $key in
+        [1-9])
+            move_cursor ${key}
+            show_selected_line
+            ;;
         g)
             prompt 'Which folder'
             key="$(getkey)"
@@ -182,6 +202,14 @@ while key="$(getkey)"; do
            ;;
 
         Ctrl-d) exit ;;
+        Ctrl-n)
+            move_cursor "+"
+            show_selected_line
+            ;;
+        Ctrl-p)
+            move_cursor "-"
+            show_selected_line
+            ;;
         Ctrl-Y) sync ;;
         *) echo "Unknown command: ${key}"
     esac
