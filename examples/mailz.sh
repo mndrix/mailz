@@ -147,6 +147,29 @@ summary() {
     )
 }
 
+# unsubscribe from the selected message
+unsubscribe() {
+    local url="$(unsubscribe_url $1)"
+    echo "URL: ${url}"
+    prompt "Open"
+    local response="$(getkey)"
+    case $response in
+        y)  echo "yes"
+            open 2>/dev/null "${url}"
+            ;;
+        *) echo "no"
+           ;;
+    esac
+}
+unsubscribe_url() {
+    mailz head -s List-Unsubscribe $1 \
+        | awk -F '[<>, ]+' '
+            $2~/https?:/ { print $2; exit; }
+            $3~/https?:/ { print $3; exit; }
+            { print $2, "\n", $3; exit; }
+        '
+}
+
 # select a folder
 choose() {
     cd "${MAIL}/$1"
@@ -207,6 +230,7 @@ while key="$(getkey)"; do
         l) list ;;
         p) print "$(selected_message)" ;;
         s) summary ;;
+        U) unsubscribe "$(selected_message)" ;;
         q) exit ;;
         y) sync -q
            summary
