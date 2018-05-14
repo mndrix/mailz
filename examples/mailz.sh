@@ -14,8 +14,12 @@ prompt() {
 
 # list emails
 list() {
-    generate_list >"tmp/${message_list}"
-    render_list <"tmp/${message_list}"
+    if [[ -d new && -d cur ]]; then
+        generate_list >"tmp/${message_list}"
+        render_list <"tmp/${message_list}"
+    else
+        echo "Choose a folder first"
+    fi
 }
 
 generate_list() {
