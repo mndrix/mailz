@@ -94,6 +94,12 @@ m() {
         mailz flags -s T "$1"
 }
 
+# mark message as done
+mark_message_as_done() {
+    local id="$(selected_message)"
+    mailz flags -s T "${id}"
+}
+
 # unselect the first selected message. execute the given ed
 # command. select the message on the resulting line.
 move_cursor() {
@@ -179,6 +185,11 @@ while key="$(getkey)"; do
     case $key in
         [1-9])
             move_cursor ${key}
+            show_selected_line
+            ;;
+        d)
+            mark_message_as_done
+            move_cursor "+"
             show_selected_line
             ;;
         g)
