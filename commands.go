@@ -3,6 +3,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"mime"
 	"net/mail"
 	"os"
 	"path/filepath"
@@ -565,6 +566,7 @@ func CommandHead(args []string) error {
 	}
 
 	// parse the header from each path
+	var wordDecoder = new(mime.WordDecoder)
 	values := make([]string, len(columns))
 	for _, path := range paths {
 		r, err := os.Open(path.String())
@@ -578,6 +580,9 @@ func CommandHead(args []string) error {
 		r.Close()
 		for i, column := range columns {
 			raw := msg.Header.Get(column.Name)
+			if decoded, err := wordDecoder.DecodeHeader(raw); err == nil {
+				raw = decoded
+			}
 			values[i] = column.Filter(path, column.Name, raw)
 		}
 		fmt.Println(strings.Join(values, "\t"))
