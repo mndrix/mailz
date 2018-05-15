@@ -180,6 +180,11 @@ func outputBody(header readonlyHeader, body io.Reader) error {
 		}
 		return errNothingToOutput
 	default:
+		if name := params["name"]; name != "" {
+			fmt.Printf("Attachment %q (%s)\n", params["name"], ct)
+		} else {
+			fmt.Printf("Attachment (%s)\n", ct)
+		}
 		return errNothingToOutput
 	}
 }
