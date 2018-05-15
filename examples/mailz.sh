@@ -108,7 +108,7 @@ mark_message_as_done() {
 # unselect the first selected message. execute the given ed
 # command. select the message on the resulting line.
 move_cursor() {
-    ed -s <<EOF "tmp/${message_list}" >/dev/null || true
+    ed -s <<EOF "tmp/${message_list}" >/dev/null 2>&1
 /^>/
 s/^>/ /
 $1
