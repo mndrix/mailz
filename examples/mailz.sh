@@ -310,12 +310,14 @@ while key="$(getkey)"; do
 
         Ctrl-d) exit ;;
         Ctrl-n)
-            move_cursor "+"
-            show_selected_line
+            if move_cursor "+"; then
+               show_selected_line
+            fi
             ;;
         Ctrl-p)
-            move_cursor "-"
-            show_selected_line
+            if move_cursor "-"; then
+               show_selected_line
+            fi
             ;;
         Ctrl-Y) sync ;;
         *) echo "Unknown command: ${key}"
