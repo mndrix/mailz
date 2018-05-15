@@ -113,50 +113,75 @@ func CommandBody(args []string) error {
 			return errors.Wrap(err, "reading message")
 		}
 
-		body := msg.Body
-		ct := msg.Header.Get("Content-Type")
-		if ct == "" {
-			ct = "text/plain"
-		}
-		ct, params, err := mime.ParseMediaType(ct)
+		err = outputBody(msg.Header, msg.Body)
 		if err != nil {
-			return errors.Wrap(err, "parsing Content-Type")
+			return errors.Wrap(err, "outputing message")
 		}
-		switch ct {
-		case "multipart/alternative", "multipart/mixed":
-			boundary, ok := params["boundary"]
-			if !ok {
-				return errors.New("multipart/alternative without boundary")
-			}
-			parts := multipart.NewReader(msg.Body, boundary)
-			for {
-				part, err := parts.NextPart()
-				if err == io.EOF {
-					break
-				}
-				if err != nil {
-					return errors.Wrap(err, "invalid multipart message")
-				}
-				ct, _, err := mime.ParseMediaType(part.Header.Get("Content-Type"))
-				if err != nil {
-					return errors.Wrap(err, "parsing multipart Content-Type")
-				}
-				if ct == "text/plain" {
-					body = part
-					break
-				}
-			}
-		}
-
-		_, err = io.Copy(os.Stdout, body)
-		if err != nil {
-			return errors.Wrap(err, "copying body to output")
-		}
-
 		r.Close()
 	}
 
 	return nil
+}
+
+type readonlyHeader interface {
+	Get(string) string
+}
+
+var errNothingToOutput = errors.New("nothing to output")
+
+// output a message, recursively
+func outputBody(header readonlyHeader, body io.Reader) error {
+	ct := header.Get("Content-Type")
+	if ct == "" {
+		ct = "text/plain"
+	}
+	ct, params, err := mime.ParseMediaType(ct)
+	if err != nil {
+		return errors.Wrap(err, "parsing Content-Type")
+	}
+
+	switch ct {
+	case "text/plain":
+		_, err = io.Copy(os.Stdout, body)
+		if err != nil {
+			return errors.Wrap(err, "copying body to output")
+		}
+		return nil
+	case "multipart/alternative", "multipart/mixed":
+		boundary, ok := params["boundary"]
+		if !ok {
+			return errors.New("multipart/* without boundary")
+		}
+		parts := multipart.NewReader(body, boundary)
+		didOutput := false
+		for {
+			part, err := parts.NextPart()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return errors.Wrap(err, "invalid multipart message")
+			}
+			err = outputBody(part.Header, part)
+			switch err {
+			case nil:
+				didOutput = true
+				if ct == "multipart/alternative" {
+					// only output the first part
+					return nil
+				}
+			case errNothingToOutput:
+			default:
+				return errors.Wrap(err, "outputing body")
+			}
+		}
+		if didOutput {
+			return nil
+		}
+		return errNothingToOutput
+	default:
+		return errNothingToOutput
+	}
 }
 
 func CommandCopy(args []string) error {
