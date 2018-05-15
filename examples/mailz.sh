@@ -225,6 +225,12 @@ prompt
 while key="$(getkey)"; do
     echo "${key}"
     case $key in
+        0)
+            prompt 'Which message'
+            read number
+            move_cursor "${number}"
+            show_selected_line
+            ;;
         [1-9])
             move_cursor ${key}
             show_selected_line
