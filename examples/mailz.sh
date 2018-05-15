@@ -51,7 +51,9 @@ prompt() {
 # list emails
 list() {
     if [[ -d new && -d cur ]]; then
-        generate_list >"tmp/${message_list}"
+        if [[ ! -e "tmp/${message_list}" ]]; then
+            generate_list >"tmp/${message_list}"
+        fi
         render_list <"tmp/${message_list}"
     else
         echo "Choose a folder first"
@@ -291,6 +293,10 @@ while key="$(getkey)"; do
             select_folder "$(choose_a_folder)"
             ;;
         l) list ;;
+        L)
+            rm -f "tmp/${message_list}"
+            list
+            ;;
         p) print standard "$(selected_message)" ;;
         P) print verbose "$(selected_message)" ;;
         s) summary ;;
