@@ -118,7 +118,8 @@ EOF
 
 # display a message
 print() {
-    local id=$1
+    local mode=$1
+    local id=$2
     if [[ -z $id ]]; then
         echo "No message selected"
         return
@@ -126,9 +127,22 @@ print() {
 
     mailz cur "${id}"
     mailz flags -s S "${id}"
-    # TODO { mailz head "${id}"; mailz body "${id}"; } | $PAGER
     local path="$(mailz resolve ${id})"
-    less -p '^(Subject|From):' "${path}"
+    case $mode in
+        standard)
+            {
+                perl -n -e '
+                    exit if /^$/;
+                    print if /^(Cc|Date|From|List-ID|Subject|To|X-Mailgun-Sscore):/i;
+                ' "${path}" | sort;
+                echo;
+                mailz body "${path}" | fmt;
+            } | ${PAGER:-more}
+            ;;
+        verbose)
+            ${PAGER:-more} "${path}"
+            ;;
+    esac
 }
 
 # reply to a message
@@ -232,7 +246,8 @@ while key="$(getkey)"; do
             esac
             ;;
         l) list ;;
-        p) print "$(selected_message)" ;;
+        p) print standard "$(selected_message)" ;;
+        P) print verbose "$(selected_message)" ;;
         s) summary ;;
         U) unsubscribe "$(selected_message)" ;;
         q) exit ;;

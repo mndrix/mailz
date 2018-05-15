@@ -57,6 +57,8 @@ func Dispatch(args []string) error {
 	var err error
 
 	switch args[0] {
+	case "body":
+		err = CommandBody(args[1:])
 	case "copy":
 		err = CommandCopy(args[1:])
 	case "count":

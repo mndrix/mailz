@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"mime"
+	"mime/multipart"
 	"net/mail"
 	"os"
 	"path/filepath"
@@ -94,6 +95,64 @@ func IsMaildir(path string) bool {
 	}
 
 	return true
+}
+
+func CommandBody(args []string) error {
+	refs := args
+	for _, ref := range refs {
+		path, err := Resolve(ref)
+		if err != nil {
+			return errors.Wrap(err, "resolve")
+		}
+		r, err := os.Open(path)
+		if err != nil {
+			return errors.Wrap(err, "open")
+		}
+		msg, err := mail.ReadMessage(r)
+		if err != nil {
+			return errors.Wrap(err, "reading message")
+		}
+
+		body := msg.Body
+		ct, params, err := mime.ParseMediaType(msg.Header.Get("Content-Type"))
+		if err != nil {
+			return errors.Wrap(err, "parsing Content-Type")
+		}
+		switch ct {
+		case "multipart/alternative":
+			boundary, ok := params["boundary"]
+			if !ok {
+				return errors.New("multipart/alternative without boundary")
+			}
+			parts := multipart.NewReader(msg.Body, boundary)
+			for {
+				part, err := parts.NextPart()
+				if err == io.EOF {
+					break
+				}
+				if err != nil {
+					return errors.Wrap(err, "invalid multipart message")
+				}
+				ct, _, err := mime.ParseMediaType(part.Header.Get("Content-Type"))
+				if err != nil {
+					return errors.Wrap(err, "parsing multipart Content-Type")
+				}
+				if ct == "text/plain" {
+					body = part
+					break
+				}
+			}
+		}
+
+		_, err = io.Copy(os.Stdout, body)
+		if err != nil {
+			return errors.Wrap(err, "copying body to output")
+		}
+
+		r.Close()
+	}
+
+	return nil
 }
 
 func CommandCopy(args []string) error {
