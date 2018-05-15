@@ -185,7 +185,7 @@ print() {
                     print if /^(Cc|Date|From|List-ID|Subject|To|X-Mailgun-Sscore):/i;
                 ' "${path}" | sort;
                 echo;
-                mailz body "${path}" | fmt;
+                mailz body "${path}";
             } | ${PAGER:-more}
             ;;
         verbose)
