@@ -18,11 +18,6 @@ choose_a_folder() {
     esac
 }
 
-# delete a message
-d() {
-    mailz flags -s T "$1"
-}
-
 # display a prompt for input
 prompt() {
     printf "\e[0;34m${1}? \e[0m" >/dev/tty
@@ -102,11 +97,6 @@ render_list() {
     ' \
     | rs -c -z 0 5 \
     | "${PAGER:-more}"
-}
-
-# copy a message to another folder
-c() {
-    mailz copy "$1" "$2"
 }
 
 # move a message to another folder
