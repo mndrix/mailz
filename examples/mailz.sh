@@ -84,7 +84,8 @@ render_list() {
             print cursor, number, subject, from, date;
         }
     ' \
-    | rs -c -z 0 5
+    | rs -c -z 0 5 \
+    | "${PAGER:-more}"
 }
 
 # copy a message to another folder
