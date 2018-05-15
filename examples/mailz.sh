@@ -63,7 +63,7 @@ list() {
 generate_list() {
     mailz cur .
     mailz find -c T \
-        | xargs mailz head -i -s Subject -N From -E From -t Received \
+        | xargs mailz head -i -s Subject -N From -E From -t Received -f \
         | sort -t "\t" -f -k1 -k4 \
         | awk '
                 BEGIN { FS=OFS="\t" }
@@ -73,6 +73,7 @@ generate_list() {
                     name=$3;
                     email=$4;
                     date=$5;
+                    flags=$6;
 
                     # choose shortest version of From
                     if (length(name)>0 && length(name)<length(email))
@@ -84,7 +85,7 @@ generate_list() {
                     cursor=" ";
                     if (FNR==1) cursor=">";
 
-                    print cursor, id, FNR, subject, from, date;
+                    print cursor, id, FNR, subject, from, date, flags;
                 }
               '
 }
@@ -99,6 +100,7 @@ render_list() {
             subject=$4;
             from=$5;
             date=$6;
+            flags=$7;
 
             original_subject=subject;
             if (subject==previous_subject)
@@ -114,10 +116,10 @@ render_list() {
                 from=ditto
             previous_from=original_from
 
-            print cursor, number, subject, from, date;
+            print cursor, number, flags, subject, from, date;
         }
     ' \
-    | rs -c -z 0 5 \
+    | rs -c -z 0 6 \
     | "${PAGER:-more}"
 }
 

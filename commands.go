@@ -591,6 +591,10 @@ func typeIdentifier(p *Path, h, v string) string {
 	return p.Unique
 }
 
+func typeFlags(p *Path, h, v string) string {
+	return p.FlagString()
+}
+
 func typeString(p *Path, h, v string) string {
 	return v
 }
@@ -635,6 +639,11 @@ func CommandHead(args []string) error {
 				column.Filter = typeTime
 			default:
 				panic("incomplete case statement")
+			}
+			columns = append(columns, column)
+		case "-f":
+			column := columnSpec{
+				Filter: typeFlags,
 			}
 			columns = append(columns, column)
 		case "-i":
