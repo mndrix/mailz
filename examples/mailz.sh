@@ -2,6 +2,22 @@ set -e
 MAIL=~/Mail
 readonly message_list="mailz-message-list.txt"
 
+choose_a_folder() {
+    prompt 'Which folder'
+    local key="$(getkey)"
+    case $key in
+        g) echo good ;;
+        i) echo inbox ;;
+        p) echo spam ;;
+        s) echo best ;;
+        t) echo better ;;
+        *)
+            echo "Unknown folder: ${key}"
+            return 1
+            ;;
+    esac
+}
+
 # delete a message
 d() {
     mailz flags -s T "$1"
@@ -240,16 +256,7 @@ while key="$(getkey)"; do
             move_cursor "+" && show_selected_line
             ;;
         g)
-            prompt 'Which folder'
-            key="$(getkey)"
-            case $key in
-                g) select_folder good ;;
-                i) select_folder inbox ;;
-                p) select_folder spam ;;
-                s) select_folder best ;;
-                t) select_folder better ;;
-                *) echo "Unknown folder: ${key}" ;;
-            esac
+            select_folder "$(choose_a_folder)"
             ;;
         l) list ;;
         p) print standard "$(selected_message)" ;;
