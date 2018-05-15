@@ -9,7 +9,7 @@ d() {
 
 # display a prompt for input
 prompt() {
-    printf "\e[0;34m${1}? \e[0m"
+    printf "\e[0;34m${1}? \e[0m" >/dev/tty
 }
 
 # list emails
