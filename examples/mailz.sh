@@ -59,11 +59,6 @@ list() {
 }
 
 generate_list() {
-    if [[ (! -d new) || (! -d cur) ]]; then
-        summary
-        return
-    fi
-
     mailz cur .
     mailz find -c T \
         | xargs mailz head -i -s Subject -N From -E From -t Received \
