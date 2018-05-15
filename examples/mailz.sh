@@ -231,8 +231,7 @@ while key="$(getkey)"; do
             ;;
         d)
             mark_message_as_done
-            move_cursor "+"
-            show_selected_line
+            move_cursor "+" && show_selected_line
             ;;
         g)
             prompt 'Which folder'
