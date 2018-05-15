@@ -240,6 +240,7 @@ unsubscribe_url() {
 # select a folder
 select_folder() {
     cd "${MAIL}/$1"
+    rm -f "tmp/${message_list}"
     list
 }
 
