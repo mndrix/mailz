@@ -103,9 +103,29 @@ render_list() {
 }
 
 # move a message to another folder
-m() {
-    mailz copy "$1" "$2" && \
-        mailz flags -s T "$1"
+move_message() {
+    local dst="$(choose_a_folder)"
+    if [[ $? != 0 ]]; then
+        echo "Trouble selecting a target folder" >&2
+        return 1
+    fi
+
+    local msg="$(selected_message)"
+    if [[ $? != 0 ]]; then
+        echo "No message selected" >&2
+        return 1
+    fi
+
+    mailz cur "${msg}"
+    local path="$(mailz copy ${msg} ../${dst})"
+    mailz flags -s T "${msg}"
+
+    # remove mbsync's X-TUID header from the copy
+    sed -i -E '1,/^$/{ /^X-TUID: /d; }' "${path}"
+
+    if move_cursor "+"; then
+        show_selected_line
+    fi
 }
 
 # mark message as done
@@ -257,6 +277,7 @@ while key="$(getkey)"; do
         P) print verbose "$(selected_message)" ;;
         s) summary ;;
         U) unsubscribe "$(selected_message)" ;;
+        v) move_message ;;
         q) exit ;;
         y) sync -q
            summary
