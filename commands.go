@@ -114,7 +114,11 @@ func CommandBody(args []string) error {
 		}
 
 		body := msg.Body
-		ct, params, err := mime.ParseMediaType(msg.Header.Get("Content-Type"))
+		ct := msg.Header.Get("Content-Type")
+		if ct == "" {
+			ct = "text/plain"
+		}
+		ct, params, err := mime.ParseMediaType(ct)
 		if err != nil {
 			return errors.Wrap(err, "parsing Content-Type")
 		}
