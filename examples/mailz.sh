@@ -21,6 +21,28 @@ choose_a_folder() {
     echo $folder
 }
 
+compose_new_message() {
+    local message="$(mktemp $MAIL/mailz-XXXXXXX)"
+    { printf "From: ";
+      from_line;
+      echo "To: ";
+      echo "Subject: ";
+    } >>"${message}"
+    if "${EDITOR:-vi}" "${message}"; then
+        if [[ -s "${message}" ]]; then
+            sendmail -v -t <"${message}"
+        else
+            echo "Aborting. Empty message" >&2
+        fi
+    fi
+    rm -f "${message}"
+}
+
+# output the content which should occur on the From: line
+from_line() {
+    sed -nE '/^set +from=/{ s/^[^"]*"//; s/"$//; p; q; }' ~/.mailrc
+}
+
 # display a prompt for input
 prompt() {
     printf "\e[0;34m${1}? \e[0m" >/dev/tty
@@ -263,6 +285,7 @@ while key="$(getkey)"; do
             move_cursor ${key}
             show_selected_line
             ;;
+        c) compose_new_message ;;
         d)
             mark_message_as_done
             if move_cursor "+"; then
