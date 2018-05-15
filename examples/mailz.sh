@@ -253,7 +253,9 @@ while key="$(getkey)"; do
             ;;
         d)
             mark_message_as_done
-            move_cursor "+" && show_selected_line
+            if move_cursor "+"; then
+                show_selected_line
+            fi
             ;;
         g)
             select_folder "$(choose_a_folder)"
