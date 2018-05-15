@@ -3,19 +3,22 @@ MAIL=~/Mail
 readonly message_list="mailz-message-list.txt"
 
 choose_a_folder() {
+    local folder
     prompt 'Which folder'
     local key="$(getkey)"
     case $key in
-        g) echo good ;;
-        i) echo inbox ;;
-        p) echo spam ;;
-        s) echo best ;;
-        t) echo better ;;
+        g) folder=good ;;
+        i) folder=inbox ;;
+        p) folder=spam ;;
+        s) folder=best ;;
+        t) folder=better ;;
         *)
             echo "Unknown folder: ${key}"
             return 1
             ;;
     esac
+    echo $folder >&2
+    echo $folder
 }
 
 # display a prompt for input
@@ -198,7 +201,6 @@ unsubscribe_url() {
 # select a folder
 select_folder() {
     cd "${MAIL}/$1"
-    echo "$1"
     list
 }
 
