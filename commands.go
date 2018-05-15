@@ -119,7 +119,7 @@ func CommandBody(args []string) error {
 			return errors.Wrap(err, "parsing Content-Type")
 		}
 		switch ct {
-		case "multipart/alternative":
+		case "multipart/alternative", "multipart/mixed":
 			boundary, ok := params["boundary"]
 			if !ok {
 				return errors.New("multipart/alternative without boundary")
