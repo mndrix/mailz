@@ -190,7 +190,7 @@ unsubscribe_url() {
 }
 
 # select a folder
-choose() {
+select_folder() {
     cd "${MAIL}/$1"
     echo "$1"
     list
@@ -243,11 +243,11 @@ while key="$(getkey)"; do
             prompt 'Which folder'
             key="$(getkey)"
             case $key in
-                g) choose good ;;
-                i) choose inbox ;;
-                p) choose spam ;;
-                s) choose best ;;
-                t) choose better ;;
+                g) select_folder good ;;
+                i) select_folder inbox ;;
+                p) select_folder spam ;;
+                s) select_folder best ;;
+                t) select_folder better ;;
                 *) echo "Unknown folder: ${key}" ;;
             esac
             ;;
