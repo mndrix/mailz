@@ -147,7 +147,7 @@ func outputBody(header readonlyHeader, body io.Reader) error {
 			return errors.Wrap(err, "copying body to output")
 		}
 		return nil
-	case "multipart/alternative", "multipart/mixed":
+	case "multipart/alternative", "multipart/mixed", "multipart/related":
 		boundary, ok := params["boundary"]
 		if !ok {
 			return errors.New("multipart/* without boundary")
