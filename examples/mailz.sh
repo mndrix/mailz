@@ -23,8 +23,9 @@ choose_a_folder() {
 
 compose_new_message() {
     local message="$(mktemp $MAIL/mailz-XXXXXXX)"
-    { printf "From: ";
-      from_line;
+    local from="$(from_line)"
+    { echo "From: ${from}";
+      echo "Bcc: ${from}";
       echo "To: ";
       echo "Subject: ";
     } >>"${message}"
