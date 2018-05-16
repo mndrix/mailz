@@ -693,6 +693,27 @@ func CommandHead(args []string) error {
 	return nil
 }
 
+func CommandMove(args []string) error {
+	if len(args) != 2 {
+		return errors.New("Must have exactly 2 arguments")
+	}
+
+	src, dst := args[0], args[1]
+	err := CommandCur([]string{src})
+	if err != nil {
+		return errors.Wrap(err, "moving into cur")
+	}
+	err = CommandCopy([]string{src, dst})
+	if err != nil {
+		return errors.Wrap(err, "copying to destination folder")
+	}
+	err = CommandFlags([]string{"-s", "T", src})
+	if err != nil {
+		return errors.Wrap(err, "adding T flag")
+	}
+	return nil
+}
+
 // CommandUnique outputs, for each message path, the unique portion of
 // the message's path.  See Unique.
 func CommandUnique(paths []string) error {

@@ -138,9 +138,7 @@ move_message() {
         return 1
     fi
 
-    mailz cur "${msg}"
-    local path="$(mailz copy ${msg} ../${dst})"
-    mailz flags -s T "${msg}"
+    local path="$(mailz move ${msg} ../${dst})"
 
     # remove mbsync's X-TUID header from the copy
     sed -i -E '1,/^$/{ /^X-TUID: /d; }' "${path}"

@@ -71,6 +71,8 @@ func Dispatch(args []string) error {
 		err = CommandFind(args[1:])
 	case "flags":
 		err = CommandFlags(args[1:])
+	case "move":
+		err = CommandMove(args[1:])
 	case "resolve":
 		err = CommandResolve(args[1:])
 	case "unique":
