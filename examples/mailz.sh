@@ -213,7 +213,7 @@ selected_message() {
 summary() {
     (
         cd "${MAIL}"
-        mailz count -c T  best better good inbox spam | sed -E 's/	0$//'
+        mailz count -c T inbox best better good spam trash | sed -E 's/	0$//'
     )
 }
 
