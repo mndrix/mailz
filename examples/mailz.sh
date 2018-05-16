@@ -65,7 +65,7 @@ generate_list() {
     mailz cur .
     mailz find -c T \
         | xargs mailz head -i -s Subject -N From -E From -t Received -f \
-        | sort -t "\t" -f -k1 -k4 \
+        | sort -t "$(printf '\t')" -f -k 2 -k 5 \
         | awk '
                 BEGIN { FS=OFS="\t" }
                 {
