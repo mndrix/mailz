@@ -166,6 +166,63 @@ w
 EOF
 }
 
+# move messages from Inbox to Good, Better or Best folders
+organize_inbox() {
+    cd "${MAIL}/inbox"
+    readonly tmp="tmp/mailz-organize-inbox.txt"
+    mailz find -c T \
+        | xargs mailz head -i -s subject -E from -s list-id \
+        | awk '
+            BEGIN { FS=OFS="\t" }
+            {
+                id=$1;
+                subject=$2;
+                from=$3;
+                list=$4;
+                if (list=="") list="none";
+            }
+            function its(folder) {
+                print id, folder, subject, from, list;
+            }
+
+            # low priority
+            from~/chase.com$/ { its("good"); next; }
+            from~/google.com$/ && from~/noreply/ { its("good"); next; }
+            from~/stripe.com$/ { its("good"); next; }
+
+            # emails from myself
+            from~/^michael@ndrix.(org|com)$/ { its("done"); next; }
+
+            # default priority
+            { its("better"); }
+        ' \
+        | tee "${tmp}" \
+        | rs -c -z 0 5
+    prompt 'Move these messages'
+    local response="$(getkey)"
+    echo "${response}"
+    if [[ $response != "y" ]]; then
+        echo "Aborting organization"
+        rm -f "${tmp}"
+        cd - >/dev/null
+        return
+    fi
+
+    # move messages
+    awk -F t '$2!="done"{print $1, "../" $2}' <"${tmp}" \
+        | xargs -n2 mailz move \
+        | xargs sed -i -E '1,/^$/{ /^X-TUID: /d; }'
+
+    # mark messages as done
+    awk -F t '$2=="done"{print $1}' <"${tmp}" \
+        | xargs mailz flags -s T
+
+    # clean up
+    rm -f "${tmp}"
+    cd - >/dev/null
+    summary
+}
+
 # display a message
 print() {
     local mode=$1
@@ -299,6 +356,7 @@ while key="$(getkey)"; do
             rm -f "tmp/${message_list}"
             list
             ;;
+        O) organize_inbox ;;
         p) print standard "$(selected_message)" ;;
         P) print verbose "$(selected_message)" ;;
         s) summary ;;
