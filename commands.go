@@ -115,7 +115,7 @@ func CommandBody(args []string) error {
 
 		err = outputBody(msg.Header, msg.Body)
 		if err != nil {
-			return errors.Wrap(err, "outputing message")
+			return errors.Wrap(err, "outputting message")
 		}
 		r.Close()
 	}
@@ -172,7 +172,7 @@ func outputBody(header readonlyHeader, body io.Reader) error {
 				}
 			case errNothingToOutput:
 			default:
-				return errors.Wrap(err, "outputing body")
+				return errors.Wrap(err, "outputting body")
 			}
 		}
 		if didOutput {
