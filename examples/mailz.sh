@@ -13,7 +13,7 @@ choose_a_folder() {
         s) folder=best ;;
         t) folder=better ;;
         *)
-            echo "Unknown folder: ${key}"
+            echo "Unknown folder: ${key}" >&2
             return 1
             ;;
     esac
