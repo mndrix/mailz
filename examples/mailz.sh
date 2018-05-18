@@ -174,7 +174,7 @@ EOF
 # move messages from Inbox to Good, Better or Best folders
 organize_inbox() {
     cd "${MAIL}/inbox"
-    readonly tmp="tmp/mailz-organize-inbox.txt"
+    local tmp="tmp/mailz-organize-inbox.txt"
     mailz find -c T \
         | xargs mailz head -i -s subject -E from -s list-id \
         | awk '
