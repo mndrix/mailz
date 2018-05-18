@@ -29,6 +29,11 @@ compose_new_message() {
       echo "To: ";
       echo "Subject: ";
     } >>"${message}"
+    edit_and_send_mail "${message}"
+}
+
+edit_and_send_mail() {
+    local message="$1"
     if "${EDITOR:-vi}" "${message}"; then
         if [[ -s "${message}" ]]; then
             sendmail -v -t <"${message}"
