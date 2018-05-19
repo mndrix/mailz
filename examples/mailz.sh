@@ -375,6 +375,12 @@ while key="$(getkey)"; do
            summary
            ;;
 
+        Enter)
+            mark_message_as_done
+            if move_cursor "+"; then
+                print standard "$(selected_message)"
+            fi
+            ;;
         Ctrl-d) exit ;;
         Ctrl-n)
             if move_cursor "+"; then
