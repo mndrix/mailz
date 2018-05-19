@@ -376,7 +376,7 @@ while key="$(getkey)"; do
            ;;
 
         Enter)
-            mark_message_as_done
+            mark_message_as_done "$(selected_message)"
             if move_cursor "+"; then
                 print standard "$(selected_message)"
             fi
