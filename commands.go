@@ -1,5 +1,6 @@
 package mailz // import "github.com/mndrix/mailz"
 import (
+	"encoding/base64"
 	"flag"
 	"fmt"
 	"io"
@@ -145,6 +146,8 @@ func outputBody(header readonlyHeader, body io.Reader) error {
 	case "text/plain":
 		if cte := header.Get("Content-Transfer-Encoding"); cte == "quoted-printable" {
 			body = quotedprintable.NewReader(body)
+		} else if cte == "base64" {
+			body = base64.NewDecoder(base64.StdEncoding, body)
 		}
 		_, err = io.Copy(os.Stdout, body)
 		if err != nil {
