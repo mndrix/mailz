@@ -1,6 +1,7 @@
 set -e
 MAIL=~/Mail
 readonly message_list="mailz-message-list.txt"
+readonly mute_list="${MAIL}/muted.txt"
 
 choose_a_folder() {
     local folder
@@ -173,14 +174,23 @@ w
 EOF
 }
 
+# mute emails whose Subject matches this message's Subject
+mute_subject() {
+    mailz head -s Subject "$1" | perl -pe 's/^re: +//i' >>"${mute_list}"
+}
+
 # move messages from Inbox to Good, Better or Best folders
 organize_inbox() {
+    # make sure the mute list exists
+    touch "${mute_list}"
+    
     cd "${MAIL}/inbox"
     local tmp="tmp/mailz-organize-inbox.txt"
     mailz find -c T \
         | xargs mailz head -i -s subject -E from -s list-id \
         | awk '
             BEGIN { FS=OFS="\t" }
+            FILENAME~/muted.txt/ { muted[$0] = 1; next; }
             {
                 id=$1;
                 subject=$2;
@@ -192,6 +202,9 @@ organize_inbox() {
                 print id, folder, subject, from, list;
             }
 
+            # muted
+            muted[subject] { its("trash"); next; }
+
             # low priority
             from~/chase.com$/ { its("good"); next; }
             from~/google.com$/ && from~/noreply/ { its("good"); next; }
@@ -202,7 +215,7 @@ organize_inbox() {
 
             # default priority
             { its("better"); }
-        ' \
+        ' "${mute_list}" - \
         | tee "${tmp}" \
         | rs -c -z 0 5
     prompt 'Move these messages'
@@ -363,6 +376,15 @@ while key="$(getkey)"; do
         L)
             rm -f "tmp/${message_list}"
             list
+            ;;
+        m)
+            id="$(selected_message)"
+            mute_subject "${id}"
+            mark_message_as_done "${id}"
+            echo "Muted"
+            if move_cursor "+"; then
+                print standard "$(selected_message)"
+            fi
             ;;
         O) organize_inbox ;;
         p) print standard "$(selected_message)" ;;
