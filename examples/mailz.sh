@@ -158,8 +158,7 @@ move_message() {
 
 # mark message as done
 mark_message_as_done() {
-    local id="$(selected_message)"
-    mailz flags -s T "${id}"
+    mailz flags -s T "$1"
 }
 
 # unselect the first selected message. execute the given ed
@@ -351,7 +350,8 @@ while key="$(getkey)"; do
             ;;
         c) compose_new_message ;;
         d)
-            mark_message_as_done
+            id="$(selected_message)"
+            mark_message_as_done "${id}"
             if move_cursor "+"; then
                 show_selected_line
             fi
