@@ -5,6 +5,7 @@ import (
 	"io"
 	"mime"
 	"mime/multipart"
+	"mime/quotedprintable"
 	"net/mail"
 	"os"
 	"path/filepath"
@@ -142,6 +143,9 @@ func outputBody(header readonlyHeader, body io.Reader) error {
 
 	switch ct {
 	case "text/plain":
+		if cte := header.Get("Content-Transfer-Encoding"); cte == "quoted-printable" {
+			body = quotedprintable.NewReader(body)
+		}
 		_, err = io.Copy(os.Stdout, body)
 		if err != nil {
 			return errors.Wrap(err, "copying body to output")
