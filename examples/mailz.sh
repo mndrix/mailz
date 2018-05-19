@@ -29,7 +29,7 @@ compose_new_message() {
       echo "To: ";
       echo "Subject: ";
     } >>"${message}"
-    edit_and_send_mail "${message}"
+    edit_and_send_mail "${message}" || true
 }
 
 edit_and_send_mail() {
@@ -37,11 +37,13 @@ edit_and_send_mail() {
     if "${EDITOR:-vi}" "${message}"; then
         if [[ -s "${message}" ]]; then
             sendmail -v -t <"${message}"
+            rm -f "${message}"
         else
             echo "Aborting. Empty message" >&2
+            rm -f "${message}"
+            return 1
         fi
     fi
-    rm -f "${message}"
 }
 
 # output the content which should occur on the From: line
