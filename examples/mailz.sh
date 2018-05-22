@@ -133,6 +133,35 @@ render_list() {
     | "${PAGER:-more}"
 }
 
+# reply to the selected message
+reply_to_message() {
+    local id="$(selected_message)"
+    if [[ $? != 0 ]]; then
+        echo "No message selected" >&2
+        return 1
+    fi
+    local message="$(mktemp $MAIL/mailz-XXXXXXX)"
+    local from="$(from_line)"
+    local to="$(mailz head -s from ${id})"
+    local cc="$(mailz head -s to -s cc ${id} | awk -F t '{print $1 ", " $2}' | sed 's/, $//' )"
+    local subject="$(mailz head -s subject ${id} | perl -pe 's/(^re: +)?/Re: /i')"
+    local parent="$(mailz head -s message-id ${id})"
+    local references="$(mailz head -s references ${id})"
+    { echo "From: ${from}";
+      echo "Bcc: ${from}";
+      echo "In-Reply-To: ${parent}";
+      echo "References: ${references} ${parent}";
+      echo "To: ${to}";
+      echo "Cc: ${cc}";
+      echo "Subject: ${subject}";
+      echo
+      mailz body "${id}" | sed 's/^/> /'
+    } >>"${message}"
+    if edit_and_send_mail "${message}"; then
+        mailz flags -s R "${id}"
+    fi
+}
+
 # move a message to another folder
 move_message() {
     local dst="$(choose_a_folder)"
@@ -418,6 +447,7 @@ while key="$(getkey)"; do
             ;;
         v) move_message ;;
         q) exit ;;
+        r) reply_to_message ;;
         y) sync -q
            summary
            ;;
