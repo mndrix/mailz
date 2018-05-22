@@ -209,9 +209,22 @@ organize_inbox() {
             muted[subject] { its("trash"); next; }
 
             # low priority
+            from~/blackhillsenergy.com$/ { its("good"); next; }
+            from~/capitalone.com$/ { its("good"); next; }
             from~/chase.com$/ { its("good"); next; }
+            from~/flickr.com$/ { its("good"); next; }
             from~/google.com$/ && from~/noreply/ { its("good"); next; }
+            from~/nest-email.com$/ { its("good"); next; }
             from~/stripe.com$/ { its("good"); next; }
+            from~/walmart.com$/ { its("good"); next; }
+            from~/wealthfront.com$/ { its("good"); next; }
+            from~/youtube.com$/ && from~/noreply/ { its("good"); next; }
+            subject~/GitHub Explore/ { its("good"); next; }
+            subject~/mentioned you on Twitter/ { its("good"); next; }
+            subject~/[Pp]rivacy [Pp]olicy/ { its("good"); next; }
+            subject~/[Ss]tatement/ { its("good"); next; }
+            subject~/[Yy]our [Oo]rder/ { its("good"); next; }
+            subject~/[Yy]our [Rr]eceipt/ { its("good"); next; }
 
             # emails from myself
             from~/^michael@ndrix.(org|com)$/ { its("done"); next; }
