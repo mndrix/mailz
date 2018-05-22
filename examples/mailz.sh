@@ -333,6 +333,11 @@ unsubscribe_url() {
 
 # select a folder
 select_folder() {
+    # only proceed if this folder's token bucket has enough balance
+    if ! tb $1 1; then
+        return
+    fi
+    
     cd "${MAIL}/$1"
     rm -f "tmp/${message_list}"
     list
