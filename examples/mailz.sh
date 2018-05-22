@@ -194,11 +194,14 @@ organize_inbox() {
             {
                 id=$1;
                 subject=$2;
+                sub("^[Rr][Ee]: +", "", subject)
                 from=$3;
                 list=$4;
                 if (list=="") list="none";
             }
             function its(folder) {
+                if (length(subject)>60)
+                    subject=substr(subject,1,60);
                 print id, folder, subject, from, list;
             }
 
