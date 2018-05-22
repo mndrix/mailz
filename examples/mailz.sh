@@ -9,6 +9,7 @@ choose_a_folder() {
     local key="$(getkey)"
     case $key in
         g) folder=good ;;
+        h) folder=trash ;;
         i) folder=inbox ;;
         p) folder=spam ;;
         s) folder=best ;;
