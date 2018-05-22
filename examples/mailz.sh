@@ -406,7 +406,11 @@ while key="$(getkey)"; do
         p) print standard "$(selected_message)" ;;
         P) print verbose "$(selected_message)" ;;
         s) summary ;;
-        U) unsubscribe "$(selected_message)" ;;
+        u)
+            id="$(selected_message)"
+            unsubscribe "${id}"
+            mark_message_as_done "${id}"
+            ;;
         v) move_message ;;
         q) exit ;;
         y) sync -q
