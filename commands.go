@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -620,6 +621,7 @@ func typeTime(p *Path, h, v string) string {
 
 func CommandHead(args []string) error {
 	// parse command line arguments
+	outputFieldSeparator := "\t"
 	columns := make([]columnSpec, 0)
 	paths := make([]*Path, 0)
 	for i := 0; i < len(args); i++ {
@@ -658,6 +660,15 @@ func CommandHead(args []string) error {
 				Filter: typeIdentifier,
 			}
 			columns = append(columns, column)
+		case "-F":
+			i++
+			if i >= len(args) {
+				return errors.New(arg + " needs an argument")
+			}
+			if ors, err := strconv.Unquote(`"` + args[i] + `"`); err == nil {
+				args[i] = ors
+			}
+			outputFieldSeparator = args[i]
 		default:
 			if strings.HasPrefix(arg, "-") {
 				return errors.New("invalid argument: " + arg)
@@ -694,7 +705,7 @@ func CommandHead(args []string) error {
 			}
 			values[i] = column.Filter(path, column.Name, raw)
 		}
-		fmt.Println(strings.Join(values, "\t"))
+		fmt.Println(strings.Join(values, outputFieldSeparator))
 	}
 
 	return nil
