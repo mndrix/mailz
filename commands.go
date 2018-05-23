@@ -690,7 +690,6 @@ func CommandHead(args []string) error {
 
 	// parse the header from each path
 	var wordDecoder = new(mime.WordDecoder)
-	values := make([]string, len(columns))
 	for _, path := range paths {
 		r, err := os.Open(path.String())
 		if err != nil {
@@ -701,15 +700,17 @@ func CommandHead(args []string) error {
 			return errors.Wrap(err, "reading message")
 		}
 		r.Close()
-		for i, column := range columns {
+		values := make([]string, 0, len(columns))
+		for _, column := range columns {
 			raw := msg.Header.Get(column.Name)
 			if decoded, err := wordDecoder.DecodeHeader(raw); err == nil {
 				raw = decoded
 			}
-			values[i] = column.Filter(path, column.Name, raw)
+			value := column.Filter(path, column.Name, raw)
 			if showFieldName {
-				values[i] = column.Name + ": " + values[i]
+				value = column.Name + ": " + value
 			}
+			values = append(values, value)
 		}
 		fmt.Println(strings.Join(values, outputFieldSeparator))
 	}
