@@ -304,10 +304,10 @@ print() {
     case $mode in
         standard)
             {
-                perl -n -e '
-                    exit if /^$/;
-                    print if /^(Cc|Date|From|List-ID|Subject|To|X-Mailgun-Sscore):/i;
-                ' "${path}" | sort;
+                mailz head -H -z -F '\n' \
+                      -s From -s Subject -s To -s Cc -s Date \
+                      -s List-ID -s X-Mailgun-Sscore \
+                      "${path}";
                 echo;
                 mailz body "${path}";
             } | ${PAGER:-more}
