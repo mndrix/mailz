@@ -621,6 +621,7 @@ func typeTime(p *Path, h, v string) string {
 
 func CommandHead(args []string) error {
 	// parse command line arguments
+	showFieldName := false
 	outputFieldSeparator := "\t"
 	columns := make([]columnSpec, 0)
 	paths := make([]*Path, 0)
@@ -669,6 +670,8 @@ func CommandHead(args []string) error {
 				args[i] = ors
 			}
 			outputFieldSeparator = args[i]
+		case "-H":
+			showFieldName = true
 		default:
 			if strings.HasPrefix(arg, "-") {
 				return errors.New("invalid argument: " + arg)
@@ -704,6 +707,9 @@ func CommandHead(args []string) error {
 				raw = decoded
 			}
 			values[i] = column.Filter(path, column.Name, raw)
+			if showFieldName {
+				values[i] = column.Name + ": " + values[i]
+			}
 		}
 		fmt.Println(strings.Join(values, outputFieldSeparator))
 	}
