@@ -656,11 +656,6 @@ func CommandHead(args []string) error {
 				Filter: typeFlags,
 			}
 			columns = append(columns, column)
-		case "-i":
-			column := columnSpec{
-				Filter: typeIdentifier,
-			}
-			columns = append(columns, column)
 		case "-F":
 			i++
 			if i >= len(args) {
@@ -672,6 +667,11 @@ func CommandHead(args []string) error {
 			outputFieldSeparator = args[i]
 		case "-H":
 			showFieldName = true
+		case "-i":
+			column := columnSpec{
+				Filter: typeIdentifier,
+			}
+			columns = append(columns, column)
 		default:
 			if strings.HasPrefix(arg, "-") {
 				return errors.New("invalid argument: " + arg)
