@@ -1,3 +1,17 @@
+# This is a snapshot of the script I use for reading and responding to
+# email.  The workflow may not be useful to anyone else, but it can
+# serve as an example of how mailz might be used in shell scripts.
+#
+# Search for 'mailz' to see it in action.
+#
+# If you want to try this code for yourself, you'll need to
+#
+#    go get github.com/mndrix/getkey/cmd/getkey
+#
+# So the script can read and decode single keystrokes without the user
+# having to press Enter.  You might also want to change MAIL so that
+# you don't accidentally modify your own mailstore.
+
 set -e
 MAIL=~/Mail
 readonly message_list="mailz-message-list.txt"
@@ -209,86 +223,6 @@ mute_subject() {
     mailz head -s Subject "$1" | perl -pe 's/^re: +//i' >>"${mute_list}"
 }
 
-# move messages from Inbox to Good, Better or Best folders
-organize_inbox() {
-    # make sure the mute list exists
-    touch "${mute_list}"
-    
-    cd "${MAIL}/inbox"
-    local tmp="tmp/mailz-organize-inbox.txt"
-    mailz find -c T \
-        | xargs mailz head -i -s subject -E from -s list-id \
-        | awk '
-            BEGIN { FS=OFS="\t" }
-            FILENAME~/muted.txt/ { muted[$0] = 1; next; }
-            {
-                id=$1;
-                subject=$2;
-                sub("^[Rr][Ee]: +", "", subject)
-                from=$3;
-                list=$4;
-                if (list=="") list="none";
-            }
-            function its(folder) {
-                if (length(subject)>60)
-                    subject=substr(subject,1,60);
-                print id, folder, subject, from, list;
-            }
-
-            # muted
-            muted[subject] { its("trash"); next; }
-
-            # low priority
-            from~/blackhillsenergy.com$/ { its("good"); next; }
-            from~/capitalone.com$/ { its("good"); next; }
-            from~/chase.com$/ { its("good"); next; }
-            from~/flickr.com$/ { its("good"); next; }
-            from~/google.com$/ && from~/noreply/ { its("good"); next; }
-            from~/nest-email.com$/ { its("good"); next; }
-            from~/stripe.com$/ { its("good"); next; }
-            from~/walmart.com$/ { its("good"); next; }
-            from~/wealthfront.com$/ { its("good"); next; }
-            from~/youtube.com$/ && from~/noreply/ { its("good"); next; }
-            subject~/GitHub Explore/ { its("good"); next; }
-            subject~/mentioned you on Twitter/ { its("good"); next; }
-            subject~/[Pp]rivacy [Pp]olicy/ { its("good"); next; }
-            subject~/[Ss]tatement/ { its("good"); next; }
-            subject~/[Yy]our [Oo]rder/ { its("good"); next; }
-            subject~/[Yy]our [Rr]eceipt/ { its("good"); next; }
-
-            # emails from myself
-            from~/^michael@ndrix.(org|com)$/ { its("done"); next; }
-
-            # default priority
-            { its("better"); }
-        ' "${mute_list}" - \
-        | tee "${tmp}" \
-        | rs -c -z 0 5
-    prompt 'Move these messages'
-    local response="$(getkey)"
-    echo "${response}"
-    if [[ $response != "y" ]]; then
-        echo "Aborting organization"
-        rm -f "${tmp}"
-        cd - >/dev/null
-        return
-    fi
-
-    # move messages
-    awk -F t '$2!="done"{print $1, "../" $2}' <"${tmp}" \
-        | xargs -r -n2 mailz move \
-        | xargs -r sed -i -E '1,/^$/{ /^X-TUID: /d; }'
-
-    # mark messages as done
-    awk -F t '$2=="done"{print $1}' <"${tmp}" \
-        | xargs -r mailz flags -s T
-
-    # clean up
-    rm -f "${tmp}"
-    cd - >/dev/null
-    summary
-}
-
 # display a message
 print() {
     local mode=$1
@@ -316,13 +250,6 @@ print() {
             ${PAGER:-more} "${path}"
             ;;
     esac
-}
-
-# reply to a message
-r() {
-    echo "From someone@example.com Thu Apr 26 18:30:03 2018" >/tmp/message
-    cat "$1" >>/tmp/message
-    mail -f /tmp/message
 }
 
 # outputs the message ID of the first selected message if any
@@ -363,11 +290,6 @@ unsubscribe_url() {
 
 # select a folder
 select_folder() {
-    # only proceed if this folder's token bucket has enough balance
-    if ! tb $1 1; then
-        return
-    fi
-    
     cd "${MAIL}/$1"
     rm -f "tmp/${message_list}"
     list
@@ -437,7 +359,6 @@ while key="$(getkey)"; do
                 print standard "$(selected_message)"
             fi
             ;;
-        O) organize_inbox ;;
         p) print standard "$(selected_message)" ;;
         P) print verbose "$(selected_message)" ;;
         s) summary ;;
