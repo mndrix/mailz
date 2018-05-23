@@ -144,7 +144,17 @@ func outputBody(header readonlyHeader, body io.Reader) error {
 	}
 
 	switch ct {
-	case "text/plain":
+	case "text/plain", "text/html":
+		// TODO use golang.org/x/net/html.Parse() to make this work:
+		//
+		//     body, err = NewHtmlReader(body)
+		//
+		// Reading from body now produces a text representation of the
+		// underlying HTML.
+		if ct == "text/html" {
+			fmt.Println("XXXX raw HTML coming XXXX")
+		}
+
 		if cte := header.Get("Content-Transfer-Encoding"); cte == "quoted-printable" {
 			body = quotedprintable.NewReader(body)
 		} else if cte == "base64" {

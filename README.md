@@ -17,7 +17,7 @@ To extract a text version of a message body (decoded, handles MIME):
 
 ## Installation
 
-    go get -u github.com/mndrix/mailz/cmd/mailz
+    go get -u github.com/mndrix/mailz/...
 
 ## Example
 
