@@ -276,12 +276,12 @@ organize_inbox() {
 
     # move messages
     awk -F t '$2!="done"{print $1, "../" $2}' <"${tmp}" \
-        | xargs -n2 mailz move \
-        | xargs sed -i -E '1,/^$/{ /^X-TUID: /d; }'
+        | xargs -r -n2 mailz move \
+        | xargs -r sed -i -E '1,/^$/{ /^X-TUID: /d; }'
 
     # mark messages as done
     awk -F t '$2=="done"{print $1}' <"${tmp}" \
-        | xargs mailz flags -s T
+        | xargs -r mailz flags -s T
 
     # clean up
     rm -f "${tmp}"
