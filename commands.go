@@ -622,6 +622,7 @@ func typeTime(p *Path, h, v string) string {
 func CommandHead(args []string) error {
 	// parse command line arguments
 	showFieldName := false
+	hideEmptyFields := false
 	outputFieldSeparator := "\t"
 	columns := make([]columnSpec, 0)
 	paths := make([]*Path, 0)
@@ -672,6 +673,8 @@ func CommandHead(args []string) error {
 				Filter: typeIdentifier,
 			}
 			columns = append(columns, column)
+		case "-z":
+			hideEmptyFields = true
 		default:
 			if strings.HasPrefix(arg, "-") {
 				return errors.New("invalid argument: " + arg)
@@ -707,6 +710,9 @@ func CommandHead(args []string) error {
 				raw = decoded
 			}
 			value := column.Filter(path, column.Name, raw)
+			if hideEmptyFields && value == "" {
+				continue
+			}
 			if showFieldName {
 				value = column.Name + ": " + value
 			}
