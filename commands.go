@@ -203,7 +203,7 @@ func outputBody(header readonlyHeader, body io.Reader) error {
 		} else {
 			fmt.Printf("Attachment (%s)\n", ct)
 		}
-		return errNothingToOutput
+		return nil
 	}
 }
 
