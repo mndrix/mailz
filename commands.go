@@ -9,6 +9,7 @@ import (
 	"mime/quotedprintable"
 	"net/mail"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -101,12 +102,33 @@ func IsMaildir(path string) bool {
 }
 
 func CommandBody(args []string) error {
-	refs := args
-	for _, ref := range refs {
-		path, err := Resolve(ref)
-		if err != nil {
-			return errors.Wrap(err, "resolve")
+	paths := make([]string, 0, len(args))
+	filters := make(map[string]string)
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		switch arg {
+		case "-X":
+			i++
+			if i >= len(args) {
+				return errors.New(arg + " needs an argument")
+			}
+			parts := strings.SplitN(args[i], "=", 2)
+			contentType := parts[0]
+			filter := parts[1]
+			filters[contentType] = filter
+		default:
+			if strings.HasPrefix(arg, "-") {
+				return errors.New("invalid argument: " + arg)
+			}
+			path, err := Resolve(arg)
+			if err != nil {
+				return errors.Wrap(err, "resolve")
+			}
+			paths = append(paths, path)
 		}
+	}
+
+	for _, path := range paths {
 		r, err := os.Open(path)
 		if err != nil {
 			return errors.Wrap(err, "open")
@@ -116,7 +138,7 @@ func CommandBody(args []string) error {
 			return errors.Wrap(err, "reading message")
 		}
 
-		err = outputBody(msg.Header, msg.Body)
+		err = outputBody(filters, msg.Header, msg.Body)
 		if err != nil {
 			return errors.Wrap(err, "outputting message")
 		}
@@ -133,7 +155,7 @@ type readonlyHeader interface {
 var errNothingToOutput = errors.New("nothing to output")
 
 // output a message, recursively
-func outputBody(header readonlyHeader, body io.Reader) error {
+func outputBody(filters map[string]string, header readonlyHeader, body io.Reader) error {
 	ct := header.Get("Content-Type")
 	if ct == "" {
 		ct = "text/plain"
@@ -143,23 +165,36 @@ func outputBody(header readonlyHeader, body io.Reader) error {
 		return errors.Wrap(err, "parsing Content-Type")
 	}
 
-	switch ct {
-	case "text/plain", "text/html":
-		// TODO use golang.org/x/net/html.Parse() to make this work:
-		//
-		//     body, err = NewHtmlReader(body)
-		//
-		// Reading from body now produces a text representation of the
-		// underlying HTML.
-		if ct == "text/html" {
-			fmt.Println("XXXX raw HTML coming XXXX")
-		}
+	// decode body
+	if cte := header.Get("Content-Transfer-Encoding"); cte == "quoted-printable" {
+		body = quotedprintable.NewReader(body)
+	} else if cte == "base64" {
+		body = base64.NewDecoder(base64.StdEncoding, body)
+	}
 
-		if cte := header.Get("Content-Transfer-Encoding"); cte == "quoted-printable" {
-			body = quotedprintable.NewReader(body)
-		} else if cte == "base64" {
-			body = base64.NewDecoder(base64.StdEncoding, body)
+	// does user want an external filter for this content type?
+	if filter, ok := filters[ct]; ok {
+		cmd := exec.Command(filter)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		stdin, err := cmd.StdinPipe()
+		if err != nil {
+			return errors.Wrap(err, "piping to stdin: "+filter)
 		}
+		go func() {
+			_, err := io.Copy(stdin, body)
+			if err == nil {
+				err = stdin.Close()
+			}
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "copying body to stdin: %s\n", err)
+			}
+		}()
+		return cmd.Run()
+	}
+
+	switch ct {
+	case "text/plain":
 		_, err = io.Copy(os.Stdout, body)
 		if err != nil {
 			return errors.Wrap(err, "copying body to output")
@@ -180,7 +215,7 @@ func outputBody(header readonlyHeader, body io.Reader) error {
 			if err != nil {
 				return errors.Wrap(err, "invalid multipart message")
 			}
-			err = outputBody(part.Header, part)
+			err = outputBody(filters, part.Header, part)
 			switch err {
 			case nil:
 				didOutput = true
